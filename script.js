@@ -122,13 +122,21 @@ class Player {
         this.vx = 0;
         this.vy = 0;
         this.speedLoss = 0.9;
-        this.speedClamp = 2;
+        this.speedClamp = 20;
+
+        this.oldX = x;
+        this.oldY = y;
     }
     draw() {
         c.fillStyle = "black"
         c.fillRect(Math.floor(canvas.width / 2 - this.w / 2), Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h)
+
+        c.fillRect(Math.floor(canvas.width / 2 - this.w / 2) - (this.x - this.oldX), Math.floor(canvas.height / 2 - this.h / 2)- (this.y - this.oldY), this.w, this.h)
     }
     update() {
+        this.oldX = this.x;
+        this.oldY = this.y;
+
         this.updateVelocity();
         
         this.vy += 0.5
@@ -153,8 +161,11 @@ class Player {
     }
     checkCollisions() {
         lines.forEach(e => {
-            let collisionArray = rectangleToLineIntersect({ x: e.from.x * tileSize, y: e.from.y * tileSize }, { x: e.to.x * tileSize, y: e.to.y * tileSize }, this.x + Math.floor(canvas.width / 2 - this.w / 2), this.y + Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h)
-            if(collisionArray.length) console.log(collisionArray )
+            let collisionArray = movingObjectToLineIntersect({ x: e.from.x * tileSize, y: e.from.y * tileSize }, { x: e.to.x * tileSize, y: e.to.y * tileSize }, this.x + Math.floor(canvas.width / 2 - this.w / 2), this.y + Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h, this.oldX + Math.floor(canvas.width / 2 - this.w / 2), this.oldY + Math.floor(canvas.height / 2 - this.h / 2))
+            if(collisionArray.includes("left") && collisionArray.includes("right")){
+                this.y-= this.vy;
+                this.vy = 0;
+            }
             if (collisionArray.includes("up")) {
                 this.y-= this.vy;
                 this.vy = 0;
@@ -162,7 +173,6 @@ class Player {
             if (collisionArray.includes("down")) {
                 this.y-= this.vy;
                 this.vy = 0;
-
             }
             if (collisionArray.includes("left")) {
                 if(this.vx < 0){

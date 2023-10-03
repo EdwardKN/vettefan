@@ -231,6 +231,40 @@ function rectangleToLineIntersect(from, to, x, y, w, h) {
     return collisionArray;
 }
 
+function movingObjectToLineIntersect(from,to,x,y,w,h,oldX,oldY){
+    console.log(x,oldX,y,oldY)
+    let collisionArray = [];
+    if (lineIntersect(from.x, from.y, to.x, to.y, oldX, oldY, x + w, y)) {
+        collisionArray.push("up")
+    }
+    if (lineIntersect(from.x, from.y, to.x, to.y, oldX, oldY, x, y + h)) {
+        collisionArray.push("left")
+    }
+    if (lineIntersect(from.x, from.y, to.x, to.y, oldX + w, oldY, x + w, y + h)) {
+        collisionArray.push("right")
+    }
+    if (lineIntersect(from.x, from.y, to.x, to.y, oldX, oldY + h, x + w, y + h)) {
+        collisionArray.push("down")
+    }
+    if(from.x == to.x){
+        if(detectCollision(from.x,from.y,2,to.y-from.y,x+2,y,1,h)){
+            collisionArray.push("left")
+        }
+        if(detectCollision(from.x,from.y,2,to.y-from.y,x+w,y,1,h)){
+            collisionArray.push("right")
+        }
+    }
+    if(from.y == to.y){
+        if(detectCollision(from.x,from.y,to.x-from.x,2,x,y,w,1)){
+            collisionArray.push("up")
+        }
+        if(detectCollision(from.x,from.y,to.x-from.x,2,x,y+h,w,1)){
+            collisionArray.push("down")
+        }
+    }
+    return collisionArray;
+}
+
 var pressedKeys = [];
 
 window.addEventListener('keydown', function (e) {
