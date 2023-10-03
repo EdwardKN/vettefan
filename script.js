@@ -122,7 +122,7 @@ class Player {
         this.vx = 0;
         this.vy = 0;
         this.speedLoss = 0.9;
-        this.speedClamp = 0.5;
+        this.speedClamp = 2;
     }
     draw() {
         c.fillStyle = "black"
@@ -130,6 +130,8 @@ class Player {
     }
     update() {
         this.updateVelocity();
+        
+        this.vy += 0.5
 
         this.x += this.vx;
         this.y += this.vy;
@@ -152,21 +154,27 @@ class Player {
     checkCollisions() {
         lines.forEach(e => {
             let collisionArray = rectangleToLineIntersect({ x: e.from.x * tileSize, y: e.from.y * tileSize }, { x: e.to.x * tileSize, y: e.to.y * tileSize }, this.x + Math.floor(canvas.width / 2 - this.w / 2), this.y + Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h)
+            if(collisionArray.length) console.log(collisionArray )
             if (collisionArray.includes("up")) {
-                this.y++;
+                this.y-= this.vy;
                 this.vy = 0;
             }
             if (collisionArray.includes("down")) {
-                this.y--;
+                this.y-= this.vy;
                 this.vy = 0;
+
             }
             if (collisionArray.includes("left")) {
-                this.x++;
-                this.vx = 0;
+                if(this.vx < 0){
+                    this.x-= this.vx;
+                    this.vx = 0;
+                }
             }
             if (collisionArray.includes("right")) {
-                this.x--;
-                this.vx = 0;
+                if(this.vx > 0){
+                    this.x-= this.vx;
+                    this.vx = 0;
+                }
             }
         })
     }

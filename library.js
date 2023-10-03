@@ -79,10 +79,33 @@ function drawCircle(x, y, r, co) {
 }
 
 function detectCollision(x, y, w, h, x2, y2, w2, h2) {
+    let convertedR1 = rectangleConverter(x,y,w,h);
+    let convertedR2 = rectangleConverter(x2,y2,w2,h2);
+
+    x = convertedR1[0];
+    y = convertedR1[1];
+    w = convertedR1[2];
+    h = convertedR1[3];
+    x2 = convertedR2[0];
+    y2 = convertedR2[1];
+    w2 = convertedR2[2];
+    h2 = convertedR2[3];
     if (x + w > x2 && x < x2 + w2 && y + h > y2 && y < y2 + h2) {
         return true;
     };
 };
+
+function rectangleConverter(x,y,w,h){
+    if(w < 0){
+        x+=w;
+        w = Math.abs(w)
+    }
+    if(h < 0){
+        y+=h;
+        h = Math.abs(h)
+    }
+    return [x,y,w,h]
+}
 function distance(x1, y1, x2, y2) {
     const xDist = x2 - x1;
     const yDist = y2 - y1;
@@ -188,6 +211,22 @@ function rectangleToLineIntersect(from, to, x, y, w, h) {
     }
     if (lineIntersect(from.x, from.y, to.x, to.y, x, y + h, x + w, y + h)) {
         collisionArray.push("down")
+    }
+    if(from.x == to.x){
+        if(detectCollision(from.x,from.y,2,to.y-from.y,x+2,y,1,h)){
+            collisionArray.push("left")
+        }
+        if(detectCollision(from.x,from.y,2,to.y-from.y,x+w,y,1,h)){
+            collisionArray.push("right")
+        }
+    }
+    if(from.y == to.y){
+        if(detectCollision(from.x,from.y,to.x-from.x,2,x,y,w,1)){
+            collisionArray.push("up")
+        }
+        if(detectCollision(from.x,from.y,to.x-from.x,2,x,y+h,w,1)){
+            collisionArray.push("down")
+        }
     }
     return collisionArray;
 }
