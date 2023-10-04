@@ -71,6 +71,9 @@ async function loadImages(imageObject) {
     });
 }
 
+const toRad = Math.PI / 180
+const toDeg = 180 * Math.PI
+
 function drawCircle(x, y, r, co) {
     c.beginPath();
     c.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -231,6 +234,7 @@ function rectangleToLineIntersect(from, to, x, y, w, h) {
     return collisionArray;
 }
 
+
 function movingObjectToLineIntersect(from, to, x, y, w, h, oldX, oldY) {
     let collisionArray = [];
     if (lineIntersect(from.x, from.y, to.x, to.y, oldX, oldY, x + w, y)) {
@@ -273,3 +277,11 @@ window.addEventListener('keydown', function (e) {
 window.addEventListener('keyup', function (e) {
     pressedKeys[e.code] = false;
 })
+
+Number.prototype.clamp = function (min, max) {
+    return Math.min(Math.max(this, min), max)
+}
+
+function angleFromPoints(x, y, x2, y2){
+    return Math.atan2(y2 - y, x2 - x) * 180 / Math.PI
+}

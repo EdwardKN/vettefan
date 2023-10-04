@@ -113,23 +113,36 @@ class Line {
     draw() {
         drawLine({ x: this.from.x - player.x / tileSize, y: this.from.y - player.y / tileSize }, { x: this.to.x - player.x / tileSize, y: this.to.y - player.y / tileSize }, this.color);
     }
+
+    getAngle() {
+        return angleFromPoints(this.from.x, this.from.y, this.to.x, this.to.y)
+    }
 }
+
+
+
+
+
+
 
 class Player {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.w = 10;
-        this.h = 20;
         this.vx = 0;
         this.vy = 0;
-        this.speedLoss = 0.9;
-        this.speedClamp = 20;
+        
 
+        this.acc = 0.4
+        this.speedLoss = 0.9;
+        this.speedClamp = 4;
+
+        this.w = 10;
+        this.h = 20;
         this.oldX = x;
         this.oldY = y;
-
-        this.gravityOn = true;
+        this.gravityOn = false;
+        this.angle = 0
     }
     draw() {
         c.fillStyle = "black"
@@ -142,41 +155,71 @@ class Player {
         this.oldY = this.y;
 
         this.updateVelocity();
-
-        this.vy += (this.gravityOn ? gravity : 0);
-
         this.x += this.vx;
         this.y += this.vy;
 
         this.checkCollisions();
 
-
-
         this.draw()
-
     }
     updateVelocity() {
         this.vx = this.vx > this.speedClamp ? this.speedClamp : (this.vx < -this.speedClamp ? -this.speedClamp : this.vx);
         this.vy = this.vy > this.speedClamp ? this.speedClamp : (this.vy < -this.speedClamp ? -this.speedClamp : this.vy);
         this.vx *= this.speedLoss;
         this.vy *= this.speedLoss;
-        this.vx += (pressedKeys['KeyD'] ? 1 : (pressedKeys['KeyA'] ? -1 : 0));
-        this.vy += (pressedKeys['KeyS'] ? 1 : (pressedKeys['KeyW'] ? -1 : 0));
+        this.vy += (this.gravityOn ? gravity : 0)
+
+        let oX = 0
+        let oY = 0
+        if (pressedKeys['KeyD']) {
+            oX += this.acc
+        }
+
+        if (pressedKeys['KeyA']) {
+            oX -= this.acc
+        }
+
+        if (pressedKeys['KeyW']) {
+            oY -= this.acc
+        }
+
+        if (pressedKeys['KeyS']) {
+            oY += this.acc
+        }
+
+        if (oX !== 0 && oY !== 0) {
+            let mag = Math.sqrt(oX * oX + oY * oY)
+            oX *= this.acc / mag
+            oY *= this.acc / mag
+        }
+
+        this.vx += oX
+        this.vy += oY
     }
     checkCollisions() {
         lines.forEach(e => {
             let collisionArray = movingObjectToLineIntersect({ x: e.from.x * tileSize, y: e.from.y * tileSize }, { x: e.to.x * tileSize, y: e.to.y * tileSize }, this.x + Math.floor(canvas.width / 2 - this.w / 2), this.y + Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h, this.oldX + Math.floor(canvas.width / 2 - this.w / 2), this.oldY + Math.floor(canvas.height / 2 - this.h / 2))
+            //console.log(collisionArray)
+            let angle = e.getAngle() * Math.PI / 180
             if (collisionArray.includes("left") && collisionArray.includes("right")) {
                 this.y -= this.vy;
-                this.vy = 0;
+                this.vy = 0
             }
+
             if (collisionArray.includes("up")) {
-                this.y -= this.vy;
-                this.vy = 0;
+                this.y -= this.vy * (1 - Math.sin(angle));
+                this.x += this.vy * Math.cos(angle)
             }
+
+
             if (collisionArray.includes("down")) {
-                this.y -= this.vy;
-                this.vy = 0;
+                if (!pressedKeys['KeyW']) {
+                    this.y -= this.vy * (1 - Math.sin(angle))
+                    this.x += this.vy * Math.cos(angle)
+                } else {
+                    if (this.vy > 0) this.y -= this.vy
+                }
+                
             }
             if (collisionArray.includes("left")) {
                 if (this.vx < 0) {
@@ -197,3 +240,37 @@ class Player {
 
 
 init();
+
+
+function fysik3(x1, y1, x2, y2, x3, y3) {
+    let lineAngle = Math.atan2(y3 - y2, x3 - x2)
+    let playerAngle = Math.atan2(y1, x1)
+    let alpha = lineAngle - playerAngle
+
+    let mag = Math.sqrt(x1 * x1 + y1 * y1)
+
+    player.vx = mag * Math.cos((180 - alpha) * 180 / Math.PI)
+    player.vy = mag * Math.sin((180 - alpha) * 180 / Math.PI)
+}
+
+
+function fysik2(x1, y1, x2, y2, x3, y3) {
+    x2 = x3 - x2
+    y2 = y3 - y2
+    let dotProduct = x1 * x2 + y1 * y2
+    let mag1 = Math.sqrt(x1 * x1 + y1 * y1)
+    let mag2 = Math.sqrt(x2 * x2 + y2 * y2)
+
+    let alpha = Math.acos(dotProduct / (mag1 * mag2))
+
+    console.log(alpha)
+}
+
+function fysik(x1, y1, x2, y2, x3, y3) {
+    let lineAngle = Math.atan2(y3 - y2, x3 - x2) * toDeg
+    let playerAngle = Math.atan2(y1, x1)
+    let infallsvinkel = playerAngle - (lineAngle + 90)
+    let utvinkel = lineAngle + 90 - infallsvinkel
+    
+}
+    
