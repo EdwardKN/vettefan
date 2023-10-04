@@ -147,6 +147,7 @@ class Point {
             currentEditingLine = this;
             mouse.down = false;
         } else if (this.hover && mouse.down && currentEditingLine !== this) {
+            mouse.down = false;
             let line = new Line(currentEditingLine, this);
             currentEditingLine.connectedTo.push(line);
             this.connectedTo.push(line);
@@ -155,7 +156,6 @@ class Point {
             if (this.x == shapes[shapes.length - 1].lines[0].from.x && this.y == shapes[shapes.length - 1].lines[0].from.y) {
                 currentEditingLine = undefined;
                 mouse.down = false;
-                console.log(shapes[shapes.length - 1].lines)
                 shapes[shapes.length - 1].lines.forEach(e => e.shouldDraw = false)
                 drawShape(shapes[shapes.length - 1])
                 shapes.push(new Shape());
@@ -163,8 +163,16 @@ class Point {
                 currentEditingLine = this;
             }
         } else if (this.hover && mouse.down && currentEditingLine == this) {
-            //currentEditingLine = undefined;
-            //mouse.down = false;
+            shapes[shapes.length - 1].lines.forEach(e => {
+                lines.forEach((g, i) => {
+                    if (e.x == g.x && e.y == g.y) {
+                        lines.splice(i, 1);
+                    }
+                })
+            })
+            shapes[shapes.length - 1].lines = [];
+            currentEditingLine = undefined;
+            mouse.down = false;
         };
     };
     draw() {
