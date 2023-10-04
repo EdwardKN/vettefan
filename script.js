@@ -6,7 +6,7 @@ var lines = [];
 
 var player = undefined;
 
-const mapSize = 15;
+const mapSize = 50;
 const tileSize = 20;
 
 const gravity = 0.5;
@@ -17,7 +17,7 @@ async function init() {
     initiateMap();
     fixCanvas();
     //await loadImages(images);
-    player = new Player(100, 100)
+    player = new Player(200, 200)
     update();
 }
 
@@ -124,12 +124,12 @@ class Player {
         this.vx = 0;
         this.vy = 0;
         this.speedLoss = 0.9;
-        this.speedClamp = 20;
+        this.speedClamp = 5;
 
         this.oldX = x;
         this.oldY = y;
 
-        this.gravityOn = true;
+        this.gravityOn = false;
     }
     draw() {
         c.fillStyle = "black"

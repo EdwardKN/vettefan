@@ -273,3 +273,7 @@ window.addEventListener('keydown', function (e) {
 window.addEventListener('keyup', function (e) {
     pressedKeys[e.code] = false;
 })
+
+Number.prototype.clamp = function (min, max) {
+    return Math.min(Math.max(this, min), max);
+};
