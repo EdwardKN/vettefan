@@ -83,11 +83,12 @@ function drawShape(shape) {
         newC.lineTo((shape.lines[0].from.x - minX) * tileSize, (shape.lines[0].from.y - minY) * tileSize);
         newC.closePath();
         newC.clip();
-        for (let x = 0; x < newCanvas.width / images.stone.frame.w; x++) {
-            for (let y = 0; y < newCanvas.height / images.stone.frame.h; y++) {
-                newC.drawImageFromSpriteSheet(x * images.stone.frame.w, y * images.stone.frame.h, images.stone.frame.w, images.stone.frame.h, images.stone, 0, 0, images.stone.frame.w, images.stone.frame.h)
-            }
-        }
+        console.log(minX)
+        for (let x = 0; x < (newCanvas.width + minX * tileSize) / images.stone.frame.w; x++) {
+            for (let y = 0; y < (newCanvas.height + minY * tileSize) / images.stone.frame.h; y++) {
+                newC.drawImageFromSpriteSheet(x * images.stone.frame.w - minX * tileSize, y * images.stone.frame.h - minY * tileSize, images.stone.frame.w, images.stone.frame.h, images.stone, 0, 0, images.stone.frame.w, images.stone.frame.h);
+            };
+        };
         shape.img = new Image();
         shape.img.src = newCanvas.toDataURL();
 
@@ -123,7 +124,7 @@ class Shape {
         this.img = undefined;
     }
     draw() {
-        if (this.img) c.drawImage(this.img, this.x * tileSize - player.x, this.y * tileSize - player.y)
+        if (this.img) c.drawImage(this.img, Math.floor(this.x * tileSize - player.x), Math.floor(this.y * tileSize - player.y));
     }
 }
 class Point {
@@ -150,10 +151,12 @@ class Point {
             currentEditingLine.connectedTo.push(line);
             this.connectedTo.push(line);
             lines.push(line);
-            shapes[shapes.length - 1].lines.push({ from: { x: currentEditingLine.x, y: currentEditingLine.y }, to: { x: this.x, y: this.y } })
+            shapes[shapes.length - 1].lines.push(line)
             if (this.x == shapes[shapes.length - 1].lines[0].from.x && this.y == shapes[shapes.length - 1].lines[0].from.y) {
                 currentEditingLine = undefined;
                 mouse.down = false;
+                console.log(shapes[shapes.length - 1].lines)
+                shapes[shapes.length - 1].lines.forEach(e => e.shouldDraw = false)
                 drawShape(shapes[shapes.length - 1])
                 shapes.push(new Shape());
             } else {
@@ -165,7 +168,7 @@ class Point {
         };
     };
     draw() {
-        drawCircle(this.x * tileSize - player.x, this.y * tileSize - player.y, 2, this.color);
+        drawCircle(Math.floor(this.x * tileSize - player.x), Math.floor(this.y * tileSize - player.y), 2, this.color);
     };
 };
 
@@ -175,6 +178,7 @@ class Line {
         this.to = to;
         this.color = "black";
         this.hover = false;
+        this.shouldDraw = true;
     };
     update() {
         this.hover = lineCircleCollide([this.from.x * tileSize - player.x, this.from.y * tileSize - player.x], [this.to.x * tileSize - player.x, this.to.y * tileSize - player.x], [mouse.x, mouse.y], 2);
@@ -182,7 +186,9 @@ class Line {
         this.draw();
     };
     draw() {
-        drawLine({ x: this.from.x - player.x / tileSize, y: this.from.y - player.y / tileSize }, { x: this.to.x - player.x / tileSize, y: this.to.y - player.y / tileSize }, this.color);
+        if (this.shouldDraw) {
+            drawLine({ x: this.from.x - player.x / tileSize, y: this.from.y - player.y / tileSize }, { x: this.to.x - player.x / tileSize, y: this.to.y - player.y / tileSize }, this.color);
+        }
     };
 };
 
