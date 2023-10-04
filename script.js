@@ -70,10 +70,10 @@ function drawShape(shape) {
             maxX = Math.max(maxX, Math.max(shape.lines[i].from.x, shape.lines[i].to.x))
             maxY = Math.max(maxY, Math.max(shape.lines[i].from.y, shape.lines[i].to.y))
         }
+        if (minX == maxX || minY == maxY) return;
         let newCanvas = document.createElement("canvas");
         newCanvas.width = (maxX - minX) * tileSize;
         newCanvas.height = (maxY - minY) * tileSize;
-        console.log(maxY, minY)
         let newC = newCanvas.getContext("2d");
         newC.beginPath();
         newC.moveTo((shape.lines[0].from.x - minX) * tileSize, (shape.lines[0].from.y - minY) * tileSize);
@@ -151,11 +151,17 @@ class Point {
             this.connectedTo.push(line);
             lines.push(line);
             shapes[shapes.length - 1].lines.push({ from: { x: currentEditingLine.x, y: currentEditingLine.y }, to: { x: this.x, y: this.y } })
-            currentEditingLine = undefined;
-            mouse.down = false;
+            if (this.x == shapes[shapes.length - 1].lines[0].from.x && this.y == shapes[shapes.length - 1].lines[0].from.y) {
+                currentEditingLine = undefined;
+                mouse.down = false;
+                drawShape(shapes[shapes.length - 1])
+                shapes.push(new Shape());
+            } else {
+                currentEditingLine = this;
+            }
         } else if (this.hover && mouse.down && currentEditingLine == this) {
-            currentEditingLine = undefined;
-            mouse.down = false;
+            //currentEditingLine = undefined;
+            //mouse.down = false;
         };
     };
     draw() {
