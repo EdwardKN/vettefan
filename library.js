@@ -62,12 +62,9 @@ async function loadSpriteSheet() {
 
 async function loadImages(imageObject) {
     await loadSpriteSheet();
-    Object.entries(imageObject).forEach(image => {
-        for (i = 0; i < image[1].length; i++) {
-            let src = (image[1][i].split("/"))
-            let src2 = src[src.length - 2] + "/" + src[src.length - 1]
-            image[1][i] = (spritesheet.frames[spritesheet.frames.map(function (e) { return e.filename; }).indexOf(src2 + ".png")])
-        }
+    Object.entries(imageObject).forEach((image, i) => {
+        let src2 = "images/" + image[1]
+        images[image[0]] = (spritesheet.frames[spritesheet.frames.map(function (e) { return e.filename; }).indexOf(src2 + ".png")])
     });
 }
 

@@ -1,4 +1,6 @@
-var images = [];
+var images = {
+    stone: "stone"
+};
 
 var map = [];
 
@@ -16,21 +18,21 @@ var currentEditingLine = undefined;
 async function init() {
     initiateMap();
     fixCanvas();
-    //await loadImages(images);
-    player = new Player(200, 200)
+    await loadImages(images);
+    player = new Player(200, 200);
     update();
-}
+};
 
 function initiateMap() {
     map = [];
     for (let x = 0; x < mapSize; x++) {
         let row = [];
         for (let y = 0; y < mapSize; y++) {
-            row.push(new Point(x, y))
-        }
+            row.push(new Point(x, y));
+        };
         map.push(row);
-    }
-}
+    };
+};
 
 function update() {
     requestAnimationFrame(update);
@@ -41,24 +43,34 @@ function update() {
 
     renderC.imageSmoothingEnabled = false;
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height);
-}
+};
 
 function render() {
     map.forEach(e => e.forEach(g => g.update()));
+    lines.forEach(e => e.update());
 
     drawLineToMouse();
 
     player.update();
-}
+};
 
 function drawLineToMouse() {
     if (currentEditingLine) {
         drawLine({ x: currentEditingLine.x - player.x / tileSize, y: currentEditingLine.y - player.y / tileSize }, { x: mouse.x / tileSize, y: mouse.y / tileSize });
-    }
+    };
+};
+
+function save() {
+    localStorage.setItem("lines", JSON.prune(lines));
 }
+function load() {
+    lines = [];
+    let tmpLines = JSON.parse(localStorage.getItem("lines"));
 
-
-
+    tmpLines?.forEach(e => {
+        lines.push(new Line(e.from, e.to))
+    });
+}
 class Point {
     constructor(x, y) {
         this.x = x;
@@ -67,7 +79,7 @@ class Point {
         this.color = "black";
 
         this.connectedTo = [];
-    }
+    };
 
     update() {
         this.draw();
@@ -88,15 +100,12 @@ class Point {
         } else if (this.hover && mouse.down && currentEditingLine == this) {
             currentEditingLine = undefined;
             mouse.down = false;
-        }
-        this.connectedTo.forEach(e => e.update());
-
-    }
-
+        };
+    };
     draw() {
         drawCircle(this.x * tileSize - player.x, this.y * tileSize - player.y, 2, this.color);
-    }
-}
+    };
+};
 
 class Line {
     constructor(from, to) {
@@ -104,16 +113,16 @@ class Line {
         this.to = to;
         this.color = "black";
         this.hover = false;
-    }
+    };
     update() {
         this.hover = lineCircleCollide([this.from.x * tileSize - player.x, this.from.y * tileSize - player.x], [this.to.x * tileSize - player.x, this.to.y * tileSize - player.x], [mouse.x, mouse.y], 2);
         this.color = this.hover ? "gray" : "black"
         this.draw();
-    }
+    };
     draw() {
         drawLine({ x: this.from.x - player.x / tileSize, y: this.from.y - player.y / tileSize }, { x: this.to.x - player.x / tileSize, y: this.to.y - player.y / tileSize }, this.color);
-    }
-}
+    };
+};
 
 class Player {
     constructor(x, y) {
@@ -149,11 +158,7 @@ class Player {
         this.y += this.vy;
 
         this.checkCollisions();
-
-
-
-        this.draw()
-
+        this.draw();
     }
     updateVelocity() {
         this.vx = this.vx > this.speedClamp ? this.speedClamp : (this.vx < -this.speedClamp ? -this.speedClamp : this.vx);
@@ -192,8 +197,6 @@ class Player {
             }
         })
     }
-
 }
-
 
 init();
