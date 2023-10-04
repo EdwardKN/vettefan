@@ -4,6 +4,8 @@ var images = {
 
 var map = [];
 
+var shapes = [];
+
 var lines = [];
 
 var player = undefined;
@@ -16,6 +18,7 @@ const gravity = 0.5;
 var currentEditingLine = undefined;
 
 async function init() {
+    shapes.push(new Shape())
     initiateMap();
     fixCanvas();
     await loadImages(images);
@@ -48,11 +51,51 @@ function update() {
 function render() {
     map.forEach(e => e.forEach(g => g.update()));
     lines.forEach(e => e.update());
+    shapes.forEach(e => e.draw());
 
     drawLineToMouse();
 
     player.update();
 };
+
+function drawShape(shape) {
+    if (shape.lines.length) {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (let i = 0; i < shape.lines.length; i++) {
+            minX = Math.min(minX, Math.min(shape.lines[i].from.x, shape.lines[i].to.x))
+            minY = Math.min(minY, Math.min(shape.lines[i].from.y, shape.lines[i].to.y))
+            maxX = Math.max(maxX, Math.max(shape.lines[i].from.x, shape.lines[i].to.x))
+            maxY = Math.max(maxY, Math.max(shape.lines[i].from.y, shape.lines[i].to.y))
+        }
+        let newCanvas = document.createElement("canvas");
+        newCanvas.width = (maxX - minX) * tileSize;
+        newCanvas.height = (maxY - minY) * tileSize;
+        console.log(maxY, minY)
+        let newC = newCanvas.getContext("2d");
+        newC.beginPath();
+        newC.moveTo((shape.lines[0].from.x - minX) * tileSize, (shape.lines[0].from.y - minY) * tileSize);
+        for (var i = 1; i < shape.lines.length; i++) {
+            newC.lineTo((shape.lines[i].from.x - minX) * tileSize, (shape.lines[i].from.y - minY) * tileSize);
+        }
+        newC.lineTo((shape.lines[0].from.x - minX) * tileSize, (shape.lines[0].from.y - minY) * tileSize);
+        newC.closePath();
+        newC.clip();
+        for (let x = 0; x < newCanvas.width / images.stone.frame.w; x++) {
+            for (let y = 0; y < newCanvas.height / images.stone.frame.h; y++) {
+                newC.drawImageFromSpriteSheet(x * images.stone.frame.w, y * images.stone.frame.h, images.stone.frame.w, images.stone.frame.h, images.stone, 0, 0, images.stone.frame.w, images.stone.frame.h)
+            }
+        }
+        shape.img = new Image();
+        shape.img.src = newCanvas.toDataURL();
+
+        shape.x = minX;
+        shape.y = minY;
+
+    }
+}
 
 function drawLineToMouse() {
     if (currentEditingLine) {
@@ -70,6 +113,18 @@ function load() {
     tmpLines?.forEach(e => {
         lines.push(new Line(e.from, e.to))
     });
+}
+
+class Shape {
+    constructor() {
+        this.lines = [];
+        this.x = undefined;
+        this.y = undefined;
+        this.img = undefined;
+    }
+    draw() {
+        if (this.img) c.drawImage(this.img, this.x * tileSize - player.x, this.y * tileSize - player.y)
+    }
 }
 class Point {
     constructor(x, y) {
@@ -95,6 +150,7 @@ class Point {
             currentEditingLine.connectedTo.push(line);
             this.connectedTo.push(line);
             lines.push(line);
+            shapes[shapes.length - 1].lines.push({ from: { x: currentEditingLine.x, y: currentEditingLine.y }, to: { x: this.x, y: this.y } })
             currentEditingLine = undefined;
             mouse.down = false;
         } else if (this.hover && mouse.down && currentEditingLine == this) {

@@ -68,6 +68,11 @@ async function loadImages(imageObject) {
     });
 }
 
+CanvasRenderingContext2D.prototype.drawImageFromSpriteSheet = function (x, y, w, h, frame, cropX, cropY, cropW, cropH) {
+    if (!frame) { return }
+    this.drawImage(spritesheetImage, Math.floor(cropX + frame.frame.x), Math.floor(cropY + frame.frame.y), Math.floor(cropW), Math.floor(cropH), Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
+}
+
 function drawCircle(x, y, r, co) {
     c.beginPath();
     c.arc(x, y, r, 0, 2 * Math.PI, false);
