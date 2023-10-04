@@ -9,6 +9,8 @@ var player = undefined;
 const mapSize = 15;
 const tileSize = 20;
 
+const gravity = 0.5;
+
 var currentEditingLine = undefined;
 
 async function init() {
@@ -126,20 +128,22 @@ class Player {
 
         this.oldX = x;
         this.oldY = y;
+
+        this.gravityOn = true;
     }
     draw() {
         c.fillStyle = "black"
         c.fillRect(Math.floor(canvas.width / 2 - this.w / 2), Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h)
 
-        c.fillRect(Math.floor(canvas.width / 2 - this.w / 2) - (this.x - this.oldX), Math.floor(canvas.height / 2 - this.h / 2)- (this.y - this.oldY), this.w, this.h)
+        //c.fillRect(Math.floor(canvas.width / 2 - this.w / 2) - (this.x - this.oldX), Math.floor(canvas.height / 2 - this.h / 2)- (this.y - this.oldY), this.w, this.h)
     }
     update() {
         this.oldX = this.x;
         this.oldY = this.y;
 
         this.updateVelocity();
-        
-        this.vy += 0.5
+
+        this.vy += (this.gravityOn ? gravity : 0);
 
         this.x += this.vx;
         this.y += this.vy;
@@ -162,27 +166,27 @@ class Player {
     checkCollisions() {
         lines.forEach(e => {
             let collisionArray = movingObjectToLineIntersect({ x: e.from.x * tileSize, y: e.from.y * tileSize }, { x: e.to.x * tileSize, y: e.to.y * tileSize }, this.x + Math.floor(canvas.width / 2 - this.w / 2), this.y + Math.floor(canvas.height / 2 - this.h / 2), this.w, this.h, this.oldX + Math.floor(canvas.width / 2 - this.w / 2), this.oldY + Math.floor(canvas.height / 2 - this.h / 2))
-            if(collisionArray.includes("left") && collisionArray.includes("right")){
-                this.y-= this.vy;
+            if (collisionArray.includes("left") && collisionArray.includes("right")) {
+                this.y -= this.vy;
                 this.vy = 0;
             }
             if (collisionArray.includes("up")) {
-                this.y-= this.vy;
+                this.y -= this.vy;
                 this.vy = 0;
             }
             if (collisionArray.includes("down")) {
-                this.y-= this.vy;
+                this.y -= this.vy;
                 this.vy = 0;
             }
             if (collisionArray.includes("left")) {
-                if(this.vx < 0){
-                    this.x-= this.vx;
+                if (this.vx < 0) {
+                    this.x -= this.vx;
                     this.vx = 0;
                 }
             }
             if (collisionArray.includes("right")) {
-                if(this.vx > 0){
-                    this.x-= this.vx;
+                if (this.vx > 0) {
+                    this.x -= this.vx;
                     this.vx = 0;
                 }
             }
