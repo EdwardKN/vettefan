@@ -3,7 +3,7 @@ var images = {
     brick: "brick"
 };
 
-var map = [];
+var points = [];
 
 var shapes = [];
 
@@ -28,13 +28,13 @@ async function init() {
 };
 
 function initiateMap() {
-    map = [];
+    points = [];
     for (let x = 0; x < mapSize; x++) {
         let row = [];
         for (let y = 0; y < mapSize; y++) {
             row.push(new Point(x, y));
         };
-        map.push(row);
+        points.push(row);
     };
 };
 
@@ -56,9 +56,9 @@ function render() {
         }
 
     }
-    map.forEach(e => e.forEach(g => g.update()));
     lines.forEach(e => e.update());
     shapes.forEach(e => e.draw());
+    points.forEach(e => e.forEach(g => g.update()));
 
 
 
@@ -147,7 +147,7 @@ class Point {
 
     update() {
         this.draw();
-        this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < 5);
+        this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize / 4);
 
         this.color = this.hover ? "gray" : "black";
 
@@ -184,7 +184,9 @@ class Point {
         };
     };
     draw() {
-        drawCircle(Math.floor(this.x * tileSize - player.x), Math.floor(this.y * tileSize - player.y), 2, this.color);
+        if (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize * 1.5) {
+            drawCircle(Math.floor(this.x * tileSize - player.x), Math.floor(this.y * tileSize - player.y), 2, this.color);
+        }
     };
 };
 
@@ -193,12 +195,9 @@ class Line {
         this.from = from;
         this.to = to;
         this.color = "black";
-        this.hover = false;
         this.shouldDraw = true;
     };
     update() {
-        this.hover = lineCircleCollide([this.from.x * tileSize - player.x, this.from.y * tileSize - player.x], [this.to.x * tileSize - player.x, this.to.y * tileSize - player.x], [mouse.x, mouse.y], 2);
-        this.color = this.hover ? "gray" : "black"
         this.draw();
     };
     draw() {
