@@ -8,6 +8,8 @@ renderCanvas.style.zIndex = 0
 
 var scale = 0;
 
+const renderScale = 5;
+
 window.onload = fixCanvas;
 
 window.addEventListener("resize", fixCanvas);
@@ -35,8 +37,8 @@ renderCanvas.addEventListener("mouseup", function (e) {
 });
 
 function fixCanvas() {
-    canvas.width = 1920 / 5;
-    canvas.height = 1080 / 5;
+    canvas.width = 1920 / renderScale;
+    canvas.height = 1080 / renderScale;
     if (window.innerWidth * 9 > window.innerHeight * 16) {
         renderCanvas.width = window.innerHeight * 16 / 9;
         renderCanvas.height = window.innerHeight;

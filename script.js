@@ -83,7 +83,6 @@ function drawShape(shape) {
         newC.lineTo((shape.lines[0].from.x - minX) * tileSize, (shape.lines[0].from.y - minY) * tileSize);
         newC.closePath();
         newC.clip();
-        console.log(minX)
         for (let x = 0; x < (newCanvas.width + minX * tileSize) / images.stone.frame.w; x++) {
             for (let y = 0; y < (newCanvas.height + minY * tileSize) / images.stone.frame.h; y++) {
                 newC.drawImageFromSpriteSheet(x * images.stone.frame.w - minX * tileSize, y * images.stone.frame.h - minY * tileSize, images.stone.frame.w, images.stone.frame.h, images.stone, 0, 0, images.stone.frame.w, images.stone.frame.h);
