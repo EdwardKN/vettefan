@@ -1,5 +1,6 @@
 var images = {
-    stone: "stone"
+    stone: "stone",
+    brick: "brick"
 };
 
 var map = [];
@@ -49,9 +50,17 @@ function update() {
 };
 
 function render() {
+    for (let x = -1; x < canvas.width / 64 + 1; x++) {
+        for (let y = -1; y < canvas.height / 64 + 1; y++) {
+            c.drawImageFromSpriteSheet(x * 64 - player.x % 64, y * 64 - player.y % 64, 64, 64, images.brick, 0, 0, 64, 64)
+        }
+
+    }
     map.forEach(e => e.forEach(g => g.update()));
     lines.forEach(e => e.update());
     shapes.forEach(e => e.draw());
+
+
 
     drawLineToMouse();
 
