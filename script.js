@@ -65,7 +65,39 @@ function render() {
     drawLineToMouse();
 
     player.update();
+
+    drawLight();
 };
+
+function drawLight(){
+    lightC.clearRect(0,0,lightCanvas.width,lightCanvas.height)
+    lightC.fillStyle = "black";
+    lightC.globalAlpha = 0.5;
+    lightC.fillRect(0,0,lightCanvas.width,lightCanvas.height);
+    lightC.globalAlpha = 1;
+
+    lightC.save();
+
+    let clipping = new Path2D();
+    clipping.arc(canvas.width/2, canvas.height/2, 40, 0, 2 * Math.PI, false);
+
+    clipping.moveTo(canvas.width/2,canvas.height/2);
+
+    let viewingAngle = 60;
+    let viewLength = 500;
+    let angle = angleFromPoints(canvas.width/2, canvas.height/2,mouse.x,mouse.y);
+
+    clipping.lineTo(viewLength*Math.cos((angle-viewingAngle)*toRad) + canvas.width/2,viewLength*Math.sin((angle-viewingAngle)*toRad) + canvas.height/2)
+    clipping.lineTo(viewLength*Math.cos((angle+viewingAngle)*toRad) + canvas.width/2,viewLength*Math.sin((angle+viewingAngle)*toRad) + canvas.height/2)
+
+    lightC.clip(clipping);
+    
+    lightC.clearRect(0,0,lightCanvas.width,lightCanvas.height);
+
+    lightC.restore();
+
+    c.drawImage(lightCanvas,0,0)
+}
 
 function drawShape(shape) {
     if (shape.lines.length) {

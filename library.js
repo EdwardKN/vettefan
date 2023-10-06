@@ -1,6 +1,9 @@
 var canvas = document.createElement("canvas");
 var c = canvas.getContext("2d");
 
+var lightCanvas = document.createElement("canvas");
+var lightC = lightCanvas.getContext("2d");
+
 var renderCanvas = document.createElement("canvas");
 var renderC = renderCanvas.getContext("2d");
 document.body.appendChild(renderCanvas);
@@ -39,6 +42,8 @@ renderCanvas.addEventListener("mouseup", function (e) {
 function fixCanvas() {
     canvas.width = 1920 / renderScale;
     canvas.height = 1080 / renderScale;
+    lightCanvas.width = canvas.width;
+    lightCanvas.height = canvas.height;
     if (window.innerWidth * 9 > window.innerHeight * 16) {
         renderCanvas.width = window.innerHeight * 16 / 9;
         renderCanvas.height = window.innerHeight;
@@ -74,6 +79,9 @@ CanvasRenderingContext2D.prototype.drawImageFromSpriteSheet = function (x, y, w,
     if (!frame) { return }
     this.drawImage(spritesheetImage, Math.floor(cropX + frame.frame.x), Math.floor(cropY + frame.frame.y), Math.floor(cropW), Math.floor(cropH), Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
 }
+
+const toRad = Math.PI / 180
+const toDeg = 180 * Math.PI
 
 function drawCircle(x, y, r, co) {
     c.beginPath();
@@ -281,3 +289,7 @@ window.addEventListener('keyup', function (e) {
 Number.prototype.clamp = function (min, max) {
     return Math.min(Math.max(this, min), max);
 };
+
+function angleFromPoints(x, y, x2, y2){
+    return Math.atan2(y2 - y, x2 - x) * 180 / Math.PI
+}
