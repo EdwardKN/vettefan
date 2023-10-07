@@ -36,20 +36,40 @@ function initiateMap() {
         };
         points.push(row);
     };
+
+    let topLine = new Line(points[0][0], points[points.length - 1][0])
+    points[0][0].connectedTo.push(topLine)
+    points[points.length - 1][0].connectedTo.push(topLine)
+    lines.push(topLine)
+
+    let rightLine = new Line(points[points.length - 1][0], points[points.length - 1][points[points.length - 1].length - 1])
+    points[0][0].connectedTo.push(rightLine)
+    points[points.length - 1][0].connectedTo.push(rightLine)
+    lines.push(rightLine)
+
+    let downLine = new Line(points[points.length - 1][points[points.length - 1].length - 1], points[0][points[points.length - 1].length - 1])
+    points[0][0].connectedTo.push(downLine)
+    points[points.length - 1][0].connectedTo.push(downLine)
+    lines.push(downLine)
+
+    let leftLine = new Line(points[0][points[points.length - 1].length - 1], points[0][0])
+    points[0][0].connectedTo.push(leftLine)
+    points[points.length - 1][0].connectedTo.push(leftLine)
+    lines.push(leftLine)
 };
 
-function update() {
+async function update() {
     requestAnimationFrame(update);
     renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-    render();
+    await render();
 
     renderC.imageSmoothingEnabled = false;
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height);
 };
 
-function render() {
+async function render() {
     for (let x = -1; x < canvas.width / 64 + 1; x++) {
         for (let y = -1; y < canvas.height / 64 + 1; y++) {
             c.drawImageFromSpriteSheet(x * 64 - player.x % 64, y * 64 - player.y % 64, 64, 64, images.brick, 0, 0, 64, 64)
@@ -66,37 +86,108 @@ function render() {
 
     player.update();
 
-    drawLight();
+    await drawLight();
 };
 
-function drawLight(){
-    lightC.clearRect(0,0,lightCanvas.width,lightCanvas.height)
+async function drawLight() {
+    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height)
     lightC.fillStyle = "black";
     lightC.globalAlpha = 0.5;
-    lightC.fillRect(0,0,lightCanvas.width,lightCanvas.height);
+    lightC.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
     lightC.globalAlpha = 1;
 
     lightC.save();
 
     let clipping = new Path2D();
-    clipping.arc(canvas.width/2, canvas.height/2, 40, 0, 2 * Math.PI, false);
+    clipping.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI, false);
 
-    clipping.moveTo(canvas.width/2,canvas.height/2);
+    clipping.moveTo(canvas.width / 2, canvas.height / 2);
 
     let viewingAngle = 60;
     let viewLength = 500;
-    let angle = angleFromPoints(canvas.width/2, canvas.height/2,mouse.x,mouse.y);
+    let angle = angleFromPoints(canvas.width / 2, canvas.height / 2, mouse.x, mouse.y);
 
-    clipping.lineTo(viewLength*Math.cos((angle-viewingAngle)*toRad) + canvas.width/2,viewLength*Math.sin((angle-viewingAngle)*toRad) + canvas.height/2)
-    clipping.lineTo(viewLength*Math.cos((angle+viewingAngle)*toRad) + canvas.width/2,viewLength*Math.sin((angle+viewingAngle)*toRad) + canvas.height/2)
+    clipping.lineTo(viewLength * Math.cos((angle - viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle - viewingAngle) * toRad) + canvas.height / 2)
+    clipping.lineTo(viewLength * Math.cos((angle + viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle + viewingAngle) * toRad) + canvas.height / 2)
 
     lightC.clip(clipping);
-    
-    lightC.clearRect(0,0,lightCanvas.width,lightCanvas.height);
+
+    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
 
     lightC.restore();
 
-    c.drawImage(lightCanvas,0,0)
+    lightC.fillStyle = "black";
+    lightC.globalAlpha = 0.5;
+    lightC.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
+    lightC.globalAlpha = 1;
+
+    let pointsToDrawShadowAround = [];
+
+    lines.forEach(e => {
+        if (!lines.filter(g => lineIntersect(g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, canvas.width / 2, canvas.height / 2)).length) {
+            let tmpAngle = angleFromPoints(e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, canvas.width / 2, canvas.height / 2) + 180;
+            lightC.beginPath();
+            lightC.moveTo(e.from.x * tileSize - player.x, e.from.y * tileSize - player.y)
+            lightC.lineTo(canvas.width / 2, canvas.height / 2);
+            lightC.linewidth = 2;
+            lightC.strokeStyle = "black"
+            lightC.stroke();
+
+            let thisLineIntersections = [];
+
+            lines.forEach(g => {
+                thisLineIntersections.push(checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180) * toRad) + canvas.height / 2, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y));
+            })
+
+            let tmp = thisLineIntersections.filter(g => g.onLine2 && g.onLine1);
+
+            if (tmp.length > 1 || tmp.length == 0) {
+                pointsToDrawShadowAround.push({ x: e.from.x, y: e.from.y, angle: tmpAngle })
+            } else {
+                pointsToDrawShadowAround.push({ x: e.from.x, y: e.from.y, angle: tmpAngle })
+                pointsToDrawShadowAround.push({ x: (tmp[0].x + player.x) / tileSize, y: (tmp[0].y + player.y) / tileSize, angle: tmpAngle })
+            }
+            tmp.forEach(g => {
+                //drawCircle(g.x, g.y, 5, "black")
+            })
+
+        }
+    })
+    pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
+
+    pointsToDrawShadowAround.forEach((e, i, a) => {
+        let prev = a[(i < a.length - 1) ? i + 1 : 0];
+        drawCircle(e.x * tileSize - player.x, e.y * tileSize - player.y, 5, "black")
+
+        if (e.angle == prev.angle) {
+            drawCircle(e.x * tileSize - player.x, e.y * tileSize - player.y, 5, "yellow")
+        }
+        if (lines.filter(g => lineIntersect(g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y, e.x * tileSize - player.x, e.y * tileSize - player.y, prev.x * tileSize - player.x, prev.y * tileSize - player.y)).length) {
+            e.angle -= 0.01;
+        }
+    })
+
+    pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
+
+
+    lightC.save();
+
+    let clipping2 = new Path2D();
+    pointsToDrawShadowAround.forEach((e, i, a) => {
+        clipping2.moveTo(canvas.width / 2, canvas.height / 2);
+        clipping2.lineTo(e.x * tileSize - player.x, e.y * tileSize - player.y);
+        clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - player.x, a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - player.y);
+        clipping2.lineTo(canvas.width / 2, canvas.height / 2);
+    })
+    lightC.clip(clipping);
+    lightC.clip(clipping2);
+
+    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
+
+    lightC.restore();
+
+    c.drawImage(lightCanvas, 0, 0)
+
 }
 
 function drawShape(shape) {
