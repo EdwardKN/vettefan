@@ -245,7 +245,7 @@ function lineIntersect(a, b, c, d, p, q, r, s) {
     } else {
         lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
         gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
-        return (0.01 < lambda && lambda < 0.99) && (0.01 < gamma && gamma < 0.99);
+        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
     }
 };
 
