@@ -65,8 +65,14 @@ function update() {
 
     render();
 
+    c.fillStyle = "white"
+    c.font = "10px Arial"
+    c.fillText(fps,5,10)
+
     renderC.imageSmoothingEnabled = false;
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height);
+
+    
 };
 
 function render() {
@@ -76,31 +82,20 @@ function render() {
         }
 
     }
+    drawShadows();
     lines.forEach(e => e.update());
-    drawLight();
 
     shapes.forEach(e => e.draw());
     points.forEach(e => e.forEach(g => g.update()));
 
+    drawViewCone();
 
     drawLineToMouse();
 
     player.update();
 };
 
-function drawLight() {
-    let clipping = new Path2D();
-    clipping.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI, false);
-
-    clipping.moveTo(canvas.width / 2, canvas.height / 2);
-
-    let viewingAngle = 60;
-    let viewLength = 1000;
-    let angle = angleFromPoints(canvas.width / 2, canvas.height / 2, mouse.x, mouse.y);
-
-    clipping.lineTo(viewLength * Math.cos((angle - viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle - viewingAngle) * toRad) + canvas.height / 2)
-    clipping.lineTo(viewLength * Math.cos((angle + viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle + viewingAngle) * toRad) + canvas.height / 2)
-
+function drawShadows() {
     let pointsToDrawShadowAround = [];
 
     lines.forEach(e => {
@@ -150,32 +145,44 @@ function drawLight() {
 
     newC.restore();
 
-
     lightC.clearRect(0,0,canvas.width,canvas.height);
     lightC.globalAlpha = 1;
     lightC.drawImage(newCanvas, 0, 0)
-    lightC.globalAlpha = 1;
+
+    c.drawImage(lightCanvas, 0, 0)
+
+}
+
+function drawViewCone(){
+    let clipping = new Path2D();
+    clipping.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI, false);
+
+    clipping.moveTo(canvas.width / 2, canvas.height / 2);
+
+    let viewingAngle = 60;
+    let viewLength = 1000;
+    let angle = angleFromPoints(canvas.width / 2, canvas.height / 2, mouse.x, mouse.y);
+
+    clipping.lineTo(viewLength * Math.cos((angle - viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle - viewingAngle) * toRad) + canvas.height / 2)
+    clipping.lineTo(viewLength * Math.cos((angle + viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle + viewingAngle) * toRad) + canvas.height / 2)
+
+    let newCanvas = document.createElement("canvas");
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+    let newC = newCanvas.getContext("2d");
 
     newC.fillStyle = "black";
     newC.fillRect(0,0,canvas.width,canvas.height);
     
     newC.save();
     newC.clip(clipping);
-    newC.clip(clipping2);
 
     newC.clearRect(0,0,canvas.width,canvas.height);
 
     newC.restore();
-
-
-    lightC.globalAlpha = 0.5;
-    lightC.drawImage(newCanvas, 0, 0)
-    lightC.globalAlpha = 1;
-
-
-
-
-    c.drawImage(lightCanvas, 0, 0)
+    c.globalAlpha = 0.5;
+    c.drawImage(newCanvas, 0, 0)
+    c.globalAlpha = 1;
 
 }
 
@@ -261,7 +268,7 @@ class Point {
         this.draw();
         this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize / 4);
 
-        this.color = this.hover ? "gray" : "black";
+        this.color = this.hover ? "white" : "gray";
 
         if (this.hover && mouse.down && !currentEditingLine) {
             currentEditingLine = this;
@@ -306,7 +313,7 @@ class Line {
     constructor(from, to) {
         this.from = from;
         this.to = to;
-        this.color = "black";
+        this.color = "gray";
         this.shouldDraw = true;
     };
     update() {

@@ -344,3 +344,19 @@ function getGroupedBy(arr, key) {
     });
     return result;
 }
+
+var times = [];
+var fps;
+
+function refreshLoop() {
+    window.requestAnimationFrame(function () {
+        const now = performance.now();
+        while (times.length > 0 && times[0] <= now - 1000) {
+            times.shift();
+        }
+        times.push(now);
+        fps = times.length;
+        refreshLoop();
+    });
+}
+refreshLoop();
