@@ -135,12 +135,12 @@ function getShadowClippingForPoint(fromX,fromY){
 
 function drawShadows() {
     let clipping2 = getShadowClippingForPoint(canvas.width/2,canvas.height/2);
-
+    
     let newCanvas = document.createElement("canvas");
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
     let newC = newCanvas.getContext("2d");
-
+    
     let newCanvas2 = document.createElement("canvas");
     newCanvas2.width = canvas.width;
     newCanvas2.height = canvas.height;
@@ -148,29 +148,32 @@ function drawShadows() {
 
     newC2.fillStyle = "black";
     newC2.fillRect(0,0,canvas.width,canvas.height);
+
+
     for(let lightValue = 0; lightValue < lightSteps; lightValue++){
-        newC2.save();   
-        let clipping = new Path2D();
         points.forEach(row => {
             row.forEach(point =>{
                 if(point.light > lightValue){
+                    let clipping = new Path2D();
                     clipping.arc(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y), (lightValue)*point.light, 0, 2 * Math.PI, false);
 
-                    newC2.clip(getShadowClippingForPoint(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y)))
+                    clipping5 = getShadowClippingForPoint(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y))
+
+                    newC2.save();
+                    newC2.clip(clipping);
+                    newC2.clip(clipping5);
+
+                    newC2.clearRect(0,0,canvas.width,canvas.height);
+
+                    newC2.restore();
+
                 }
             })
         })
-        newC2.clip(clipping);
-            
-        newC2.clearRect(0,0,canvas.width,canvas.height);
-    
-        newC2.restore();
-
-        newC.globalAlpha = (lightValue/lightSteps);
-            
-        newC.drawImage(newCanvas2,0,0);
-
+        newC.globalAlpha = 0.5;
+        newC.drawImage(newCanvas2,0,0)
         newC.globalAlpha = 1;
+
     }
 
     
