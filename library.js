@@ -1,9 +1,6 @@
 var canvas = document.createElement("canvas");
 var c = canvas.getContext("2d");
 
-var lightCanvas = document.createElement("canvas");
-var lightC = lightCanvas.getContext("2d");
-
 var renderCanvas = document.createElement("canvas");
 var renderC = renderCanvas.getContext("2d");
 document.body.appendChild(renderCanvas);
@@ -42,8 +39,6 @@ renderCanvas.addEventListener("mouseup", function (e) {
 function fixCanvas() {
     canvas.width = 1920 / renderScale;
     canvas.height = 1080 / renderScale;
-    lightCanvas.width = canvas.width;
-    lightCanvas.height = canvas.height;
     if (window.innerWidth * 9 > window.innerHeight * 16) {
         renderCanvas.width = window.innerHeight * 16 / 9;
         renderCanvas.height = window.innerHeight;

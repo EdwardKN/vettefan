@@ -13,6 +13,7 @@ var player = undefined;
 
 const mapSize = 50;
 const tileSize = 20;
+const lightSteps = 16;
 
 const gravity = 0.5;
 
@@ -95,18 +96,18 @@ function render() {
     player.update();
 };
 
-function drawShadows() {
+function getShadowClippingForPoint(fromX,fromY){
     let pointsToDrawShadowAround = [];
 
     lines.forEach(e => {
-        if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), canvas.width / 2, canvas.height / 2)).length) {
-            let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), canvas.width / 2, canvas.height / 2) + 180;
+        if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY)).length) {
+            let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY) + 180;
 
             let thisLineIntersections = [];
 
             lines.forEach(g => {
-                thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + canvas.height / 2, canvas.width / 2, canvas.height / 2, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
-                thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + canvas.height / 2, canvas.width / 2, canvas.height / 2, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
+                thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
+                thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
             })
 
             let tmp = thisLineIntersections.filter(g => g.line.onLine2 && g.line.onLine1);
@@ -114,7 +115,7 @@ function drawShadows() {
             tmp = getGroupedBy(tmp, "angle")
 
             tmp.forEach(g => {
-                e = g.sort((a, b) => distance(a.line.x, a.line.y, canvas.width / 2, canvas.height / 2) - distance(b.line.x, b.line.y, canvas.width / 2, canvas.height / 2))
+                e = g.sort((a, b) => distance(a.line.x, a.line.y, fromX, fromY) - distance(b.line.x, b.line.y, fromX, fromY))
 
                 pointsToDrawShadowAround.push({ x: (g[0].line.x + Math.floor(player.x)) / tileSize, y: (g[0].line.y + Math.floor(player.y)) / tileSize, angle: g[0].angle })
             })
@@ -124,19 +125,55 @@ function drawShadows() {
 
     let clipping2 = new Path2D();
     pointsToDrawShadowAround.forEach((e, i, a) => {
-        clipping2.moveTo(canvas.width / 2, canvas.height / 2);
+        clipping2.moveTo(fromX, fromY);
         clipping2.lineTo(e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y));
         clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - Math.floor(player.x), a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - Math.floor(player.y));
-        clipping2.lineTo(canvas.width / 2, canvas.height / 2);
+        clipping2.lineTo(fromX, fromY);
     })
+    return clipping2;
+}
+
+function drawShadows() {
+    let clipping2 = getShadowClippingForPoint(canvas.width/2,canvas.height/2);
 
     let newCanvas = document.createElement("canvas");
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
     let newC = newCanvas.getContext("2d");
 
-    newC.fillStyle = "black";
-    newC.fillRect(0,0,canvas.width,canvas.height);
+    let newCanvas2 = document.createElement("canvas");
+    newCanvas2.width = canvas.width;
+    newCanvas2.height = canvas.height;
+    let newC2 = newCanvas2.getContext("2d");
+
+    newC2.fillStyle = "black";
+    newC2.fillRect(0,0,canvas.width,canvas.height);
+    for(let lightValue = 0; lightValue < lightSteps; lightValue++){
+        newC2.save();   
+        let clipping = new Path2D();
+        points.forEach(row => {
+            row.forEach(point =>{
+                if(point.light > lightValue){
+                    clipping.arc(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y), (lightValue)*point.light, 0, 2 * Math.PI, false);
+
+                    newC2.clip(getShadowClippingForPoint(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y)))
+                }
+            })
+        })
+        newC2.clip(clipping);
+            
+        newC2.clearRect(0,0,canvas.width,canvas.height);
+    
+        newC2.restore();
+
+        newC.globalAlpha = (lightValue/lightSteps);
+            
+        newC.drawImage(newCanvas2,0,0);
+
+        newC.globalAlpha = 1;
+    }
+
+    
     
     newC.save();
     newC.clip(clipping2);
@@ -145,11 +182,7 @@ function drawShadows() {
 
     newC.restore();
 
-    lightC.clearRect(0,0,canvas.width,canvas.height);
-    lightC.globalAlpha = 1;
-    lightC.drawImage(newCanvas, 0, 0)
-
-    c.drawImage(lightCanvas, 0, 0)
+    c.drawImage(newCanvas, 0, 0)
 
 }
 
@@ -262,6 +295,7 @@ class Point {
         this.color = "black";
 
         this.connectedTo = [];
+        this.light = 0;
     };
 
     update() {
@@ -269,6 +303,11 @@ class Point {
         this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize / 4);
 
         this.color = this.hover ? "white" : "gray";
+
+        if(this.hover && pressedKeys["KeyF"]){
+            this.light++;
+            pressedKeys["KeyF"] = false;
+        };
 
         if (this.hover && mouse.down && !currentEditingLine) {
             currentEditingLine = this;
