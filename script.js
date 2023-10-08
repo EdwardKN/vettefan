@@ -58,18 +58,18 @@ function initiateMap() {
     lines.push(leftLine)
 };
 
-async function update() {
+function update() {
     requestAnimationFrame(update);
     renderC.clearRect(0, 0, renderCanvas.width, renderCanvas.height)
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-    await render();
+    render();
 
     renderC.imageSmoothingEnabled = false;
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height);
 };
 
-async function render() {
+function render() {
     for (let x = -1; x < canvas.width / 64 + 1; x++) {
         for (let y = -1; y < canvas.height / 64 + 1; y++) {
             c.drawImageFromSpriteSheet(x * 64 - player.x % 64, y * 64 - player.y % 64, 64, 64, images.brick, 0, 0, 64, 64)
@@ -80,16 +80,14 @@ async function render() {
     shapes.forEach(e => e.draw());
     points.forEach(e => e.forEach(g => g.update()));
 
-
+    drawLight();
 
     drawLineToMouse();
 
     player.update();
-
-    await drawLight();
 };
 
-async function drawLight() {
+function drawLight() {
     lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height)
     lightC.fillStyle = "black";
     lightC.globalAlpha = 0.5;
@@ -126,49 +124,26 @@ async function drawLight() {
     lines.forEach(e => {
         if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), canvas.width / 2, canvas.height / 2)).length) {
             let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), canvas.width / 2, canvas.height / 2) + 180;
-            lightC.beginPath();
-            lightC.moveTo(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y))
-            lightC.lineTo(canvas.width / 2, canvas.height / 2);
-            lightC.linewidth = 2;
-            lightC.strokeStyle = "black"
-            lightC.stroke();
 
             let thisLineIntersections = [];
 
             lines.forEach(g => {
-                thisLineIntersections.push(checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180) * toRad) + canvas.height / 2, e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)));
+                thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + canvas.height / 2, canvas.width / 2, canvas.height / 2, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
+                thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + canvas.width / 2, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + canvas.height / 2, canvas.width / 2, canvas.height / 2, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
             })
 
-            let tmp = thisLineIntersections.filter(g => g.onLine2 && g.onLine1);
+            let tmp = thisLineIntersections.filter(g => g.line.onLine2 && g.line.onLine1);
+            tmp = tmp.filter(g => distance(g.line.x, g.line.y, e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y)) > 0.001)
+            tmp = getGroupedBy(tmp, "angle")
 
-            if (tmp.length > 1 || tmp.length == 0) {
-                pointsToDrawShadowAround.push({ x: e.from.x, y: e.from.y, angle: tmpAngle })
-            } else {
-                pointsToDrawShadowAround.push({ x: e.from.x, y: e.from.y, angle: tmpAngle })
-                pointsToDrawShadowAround.push({ x: (tmp[0].x + Math.floor(player.x)) / tileSize, y: (tmp[0].y + Math.floor(player.y)) / tileSize, angle: tmpAngle })
-            }
             tmp.forEach(g => {
-                //drawCircle(g.x, g.y, 5, "black")
+                e = g.sort((a, b) => distance(a.line.x, a.line.y, canvas.width / 2, canvas.height / 2) - distance(b.line.x, b.line.y, canvas.width / 2, canvas.height / 2))
+
+                pointsToDrawShadowAround.push({ x: (g[0].line.x + Math.floor(player.x)) / tileSize, y: (g[0].line.y + Math.floor(player.y)) / tileSize, angle: g[0].angle })
             })
-
         }
     })
     pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
-
-    pointsToDrawShadowAround.forEach((e, i, a) => {
-        let prev = a[(i < a.length - 1) ? i + 1 : 0];
-        drawCircle(e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y), 5, "black")
-
-        if (e.angle == prev.angle) {
-            drawCircle(e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y), 5, "yellow")
-        }
-        if (lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y), prev.x * tileSize - Math.floor(player.x), prev.y * tileSize - Math.floor(player.y))).length) {
-            e.angle -= 0.01;
-        }
-    })
-
-    pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
-
 
     lightC.save();
 

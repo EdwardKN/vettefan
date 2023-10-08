@@ -332,3 +332,15 @@ Number.prototype.clamp = function (min, max) {
 function angleFromPoints(x, y, x2, y2) {
     return Math.atan2(y2 - y, x2 - x) * 180 / Math.PI
 }
+
+function getGroupedBy(arr, key) {
+    var groups = {}, result = [];
+    arr.forEach(function (a) {
+        if (!(a[key] in groups)) {
+            groups[a[key]] = [];
+            result.push(groups[a[key]]);
+        }
+        groups[a[key]].push(a);
+    });
+    return result;
+}
