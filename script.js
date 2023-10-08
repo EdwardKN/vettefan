@@ -77,10 +77,11 @@ function render() {
 
     }
     lines.forEach(e => e.update());
+    drawLight();
+
     shapes.forEach(e => e.draw());
     points.forEach(e => e.forEach(g => g.update()));
 
-    drawLight();
 
     drawLineToMouse();
 
@@ -88,14 +89,6 @@ function render() {
 };
 
 function drawLight() {
-    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height)
-    lightC.fillStyle = "black";
-    lightC.globalAlpha = 0.5;
-    lightC.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
-    lightC.globalAlpha = 1;
-
-    lightC.save();
-
     let clipping = new Path2D();
     clipping.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI, false);
 
@@ -107,17 +100,6 @@ function drawLight() {
 
     clipping.lineTo(viewLength * Math.cos((angle - viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle - viewingAngle) * toRad) + canvas.height / 2)
     clipping.lineTo(viewLength * Math.cos((angle + viewingAngle) * toRad) + canvas.width / 2, viewLength * Math.sin((angle + viewingAngle) * toRad) + canvas.height / 2)
-
-    lightC.clip(clipping);
-
-    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
-
-    lightC.restore();
-
-    lightC.fillStyle = "black";
-    lightC.globalAlpha = 0.5;
-    lightC.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
-    lightC.globalAlpha = 1;
 
     let pointsToDrawShadowAround = [];
 
@@ -145,8 +127,6 @@ function drawLight() {
     })
     pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
 
-    lightC.save();
-
     let clipping2 = new Path2D();
     pointsToDrawShadowAround.forEach((e, i, a) => {
         clipping2.moveTo(canvas.width / 2, canvas.height / 2);
@@ -154,12 +134,46 @@ function drawLight() {
         clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - Math.floor(player.x), a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - Math.floor(player.y));
         clipping2.lineTo(canvas.width / 2, canvas.height / 2);
     })
-    lightC.clip(clipping);
-    lightC.clip(clipping2);
 
-    lightC.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
+    let newCanvas = document.createElement("canvas");
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+    let newC = newCanvas.getContext("2d");
 
-    lightC.restore();
+    newC.fillStyle = "black";
+    newC.fillRect(0,0,canvas.width,canvas.height);
+    
+    newC.save();
+    newC.clip(clipping2);
+
+    newC.clearRect(0,0,canvas.width,canvas.height);
+
+    newC.restore();
+
+
+    lightC.clearRect(0,0,canvas.width,canvas.height);
+    lightC.globalAlpha = 1;
+    lightC.drawImage(newCanvas, 0, 0)
+    lightC.globalAlpha = 1;
+
+    newC.fillStyle = "black";
+    newC.fillRect(0,0,canvas.width,canvas.height);
+    
+    newC.save();
+    newC.clip(clipping);
+    newC.clip(clipping2);
+
+    newC.clearRect(0,0,canvas.width,canvas.height);
+
+    newC.restore();
+
+
+    lightC.globalAlpha = 0.5;
+    lightC.drawImage(newCanvas, 0, 0)
+    lightC.globalAlpha = 1;
+
+
+
 
     c.drawImage(lightCanvas, 0, 0)
 
