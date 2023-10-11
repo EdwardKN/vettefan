@@ -268,12 +268,18 @@ function drawLineToMouse() {
 };
 
 function save() {
+    console.log(lines)
     localStorage.setItem("lines", JSON.prune(lines));
+    localStorage.setItem("points", JSON.prune(points));
+    let tmpShapes = JSON.parse(JSON.prune(shapes))
+
+    tmpShapes.forEach(g => g.img = undefined);
+    localStorage.setItem("shapes", JSON.prune(tmpShapes));
 }
 function load() {
     lines = [];
     let tmpLines = JSON.parse(localStorage.getItem("lines"));
-
+    console.log(tmpLines)
     tmpLines?.forEach(e => {
         lines.push(new Line(e.from, e.to))
     });
