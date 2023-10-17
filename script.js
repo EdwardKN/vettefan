@@ -68,12 +68,12 @@ function update() {
 
     c.fillStyle = "white"
     c.font = "10px Arial"
-    c.fillText(fps,5,10)
+    c.fillText(fps, 5, 10)
 
     renderC.imageSmoothingEnabled = false;
     renderC.drawImage(canvas, 0, 0, renderCanvas.width, renderCanvas.height);
 
-    
+
 };
 
 function render() {
@@ -96,7 +96,7 @@ function render() {
     player.update();
 };
 
-function getShadowClippingForPoint(fromX,fromY){
+function getShadowClippingForPoint(fromX, fromY) {
     let pointsToDrawShadowAround = [];
 
     lines.forEach(e => {
@@ -134,54 +134,20 @@ function getShadowClippingForPoint(fromX,fromY){
 }
 
 function drawShadows() {
-    let clipping2 = getShadowClippingForPoint(canvas.width/2,canvas.height/2);
-    
+    let clipping2 = getShadowClippingForPoint(canvas.width / 2, canvas.height / 2);
+
     let newCanvas = document.createElement("canvas");
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
     let newC = newCanvas.getContext("2d");
-    
-    let newCanvas2 = document.createElement("canvas");
-    newCanvas2.width = canvas.width;
-    newCanvas2.height = canvas.height;
-    let newC2 = newCanvas2.getContext("2d");
 
-    newC2.fillStyle = "black";
-    newC2.fillRect(0,0,canvas.width,canvas.height);
+    newC.fillStyle = "black";
+    newC.fillRect(0, 0, canvas.width, canvas.height);
 
-
-    for(let lightValue = 0; lightValue < lightSteps; lightValue++){
-        points.forEach(row => {
-            row.forEach(point =>{
-                if(point.light > lightValue){
-                    let clipping = new Path2D();
-                    clipping.arc(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y), (lightValue)*point.light, 0, 2 * Math.PI, false);
-
-                    clipping5 = getShadowClippingForPoint(point.x * tileSize - Math.floor(player.x), point.y * tileSize - Math.floor(player.y))
-
-                    newC2.save();
-                    newC2.clip(clipping);
-                    newC2.clip(clipping5);
-
-                    newC2.clearRect(0,0,canvas.width,canvas.height);
-
-                    newC2.restore();
-
-                }
-            })
-        })
-        newC.globalAlpha = 0.5;
-        newC.drawImage(newCanvas2,0,0)
-        newC.globalAlpha = 1;
-
-    }
-
-    
-    
     newC.save();
     newC.clip(clipping2);
 
-    newC.clearRect(0,0,canvas.width,canvas.height);
+    newC.clearRect(0, 0, canvas.width, canvas.height);
 
     newC.restore();
 
@@ -189,7 +155,7 @@ function drawShadows() {
 
 }
 
-function drawViewCone(){
+function drawViewCone() {
     let clipping = new Path2D();
     clipping.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI, false);
 
@@ -208,12 +174,12 @@ function drawViewCone(){
     let newC = newCanvas.getContext("2d");
 
     newC.fillStyle = "black";
-    newC.fillRect(0,0,canvas.width,canvas.height);
-    
+    newC.fillRect(0, 0, canvas.width, canvas.height);
+
     newC.save();
     newC.clip(clipping);
 
-    newC.clearRect(0,0,canvas.width,canvas.height);
+    newC.clearRect(0, 0, canvas.width, canvas.height);
 
     newC.restore();
     c.globalAlpha = 0.5;
@@ -307,7 +273,7 @@ class Point {
 
         this.color = this.hover ? "white" : "gray";
 
-        if(this.hover && pressedKeys["KeyF"]){
+        if (this.hover && pressedKeys["KeyF"]) {
             this.light++;
             pressedKeys["KeyF"] = false;
         };
