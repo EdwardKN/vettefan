@@ -19,12 +19,25 @@ const gravity = 0.5;
 
 var currentEditingLine = undefined;
 
+let springs = [];
+let massPoints = [];
+
 async function init() {
     shapes.push(new Shape())
     initiateMap();
     fixCanvas();
     await loadImages(images);
-    player = new Player(200, 200);
+    player = new Player(200, 800);
+    massPoints.push(new MassPoint(250,250,50))
+    massPoints.push(new MassPoint(250,270,50))
+    massPoints.push(new MassPoint(270,270,50))
+    massPoints.push(new MassPoint(270,250,50))
+    springs.push(new Spring(massPoints[0],massPoints[1],0.8,30,1.5))
+    springs.push(new Spring(massPoints[1],massPoints[2],0.8,30,1.5))
+    springs.push(new Spring(massPoints[2],massPoints[3],0.8,30,1.5))
+    springs.push(new Spring(massPoints[3],massPoints[0],0.8,30,1.5))
+    springs.push(new Spring(massPoints[0],massPoints[2],0.8,30,1.5))
+    springs.push(new Spring(massPoints[1],massPoints[3],0.8,30,1.5))
     update();
 };
 
@@ -89,9 +102,14 @@ function render() {
     shapes.forEach(e => e.draw());
     points.forEach(e => e.forEach(g => g.update()));
 
+
+
     drawViewCone();
 
     drawLineToMouse();
+
+    springs.forEach(e => e.update());
+    massPoints.forEach(e => e.update());
 
     player.update();
 };
@@ -406,6 +424,103 @@ class Player {
                 }
             }
         })
+    }
+}
+
+class MassPoint{
+    constructor(x,y,m){
+        this.pos = new Vector(x,y);
+        this.v = new Vector(0,0);
+        this.f = new Vector(0,0);
+        this.m = m;
+        this.connectedSprings = [];
+        
+    }
+
+    update(){
+        let self = this;
+        this.f.reset();
+        this.f.forEach((u,i) => {
+            let f = 0;
+            f += (i == 1 ? gravity*self.m/100 : 0)
+
+            this.connectedSprings.forEach(spring => {
+                if(spring.massP1 == this){
+                    f += spring.forceForPoint1[i]
+                }
+                if(spring.massP2 == this){
+                    f += spring.forceForPoint2[i]
+                }
+            })
+            self.f[i] = f;
+        })
+        this.v.forEach((v,i) => {
+            let vel = v;
+            vel += self.f[i]*deltaTime/self.m;
+            self.v[i] = vel;
+        })
+        this.pos.forEach((pos,i) => {
+            let p = pos;
+            p += this.v[i] * deltaTime;
+            self.pos[i] = p;
+        })
+        lines.forEach(line =>{
+            if(lineCircleCollide([line.from.x*tileSize,line.from.y*tileSize],[line.to.x*tileSize,line.to.y*tileSize],this.pos,3)){
+                this.pos.forEach((pos,i) => {
+                    let p = pos;
+                    p -= this.v[i] * deltaTime;
+                    self.pos[i] = p;
+                })
+                this.v.forEach((v,i) => {
+                    self.v[i] = 0;
+                })
+            }
+        })
+        this.draw();
+    }
+    draw(){
+        drawCircle(Math.floor(this.pos[0] - player.x), Math.floor(this.pos[1] - player.y), 2, "black");
+    }
+}
+
+class Spring{
+    constructor(massP1, massP2,stiffness,restLength,dampingFactor){
+        this.massP1 = massP1;
+        this.massP2 = massP2;
+        this.stiffness = stiffness;
+        this.restLength = restLength;
+        this.dampingFactor = dampingFactor;
+        this.forceAngle = 0;
+        this.force = 0;
+        this.forceForPoint1 = new Vector(0,0)
+        this.forceForPoint2 = new Vector(0,0)
+        this.massP1.connectedSprings.push(this);
+        this.massP2.connectedSprings.push(this);
+    }
+    update(){
+        let velDiff = this.massP1.v.subtract(this.massP2.v);
+        this.force = this.stiffness * ((distance(this.massP1.pos[0],this.massP1.pos[1],this.massP2.pos[0],this.massP2.pos[1]) - this.restLength));
+        this.forceAngle = angleFromPoints(this.massP1.pos[0],this.massP1.pos[1],this.massP2.pos[0],this.massP2.pos[1]);
+        this.forceForPoint1[0] = Math.cos(this.forceAngle*toRad) * this.force - velDiff[0]*this.dampingFactor
+        this.forceForPoint1[1] = Math.sin(this.forceAngle*toRad) * this.force- velDiff[1]*this.dampingFactor
+        this.forceForPoint2[0] = -Math.cos(this.forceAngle*toRad) * this.force+ velDiff[0]*this.dampingFactor
+        this.forceForPoint2[1] = -Math.sin(this.forceAngle*toRad) * this.force+ velDiff[1]*this.dampingFactor
+        this.draw();
+    }
+    draw(){
+        drawLine({x:(this.massP1.pos[0]- player.x)/tileSize,y:(this.massP1.pos[1]- player.y)/tileSize},{x:(this.massP2.pos[0]- player.x)/tileSize,y:(this.massP2.pos[1]- player.y)/tileSize},"red")
+    }
+}
+
+class Vector extends Array {
+    add(other) {
+      return this.map((e, i) => e + other[i]);
+    }
+    subtract(other) {
+        return this.map((e, i) => e - other[i]);
+      }
+    reset(){
+        this.map(e => (e = 0));
     }
 }
 

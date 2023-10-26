@@ -342,6 +342,7 @@ function getGroupedBy(arr, key) {
 
 var times = [];
 var fps;
+var deltaTime = 0;
 
 function refreshLoop() {
     window.requestAnimationFrame(function () {
@@ -351,6 +352,7 @@ function refreshLoop() {
         }
         times.push(now);
         fps = times.length;
+        deltaTime = 60/fps;
         refreshLoop();
     });
 }
