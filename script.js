@@ -33,15 +33,15 @@ async function init() {
     let stiff = 2;
     let damp = 0.5;
 
-    massPoints.push(new MassPoint(250, 250, mass, false))
-    massPoints.push(new MassPoint(270, 250, mass, false))
-    massPoints.push(new MassPoint(290, 250, mass, false))
-    massPoints.push(new MassPoint(290, 270, mass, false))
-    massPoints.push(new MassPoint(290, 290, mass, false))
-    massPoints.push(new MassPoint(270, 290, mass, false))
-    massPoints.push(new MassPoint(250, 290, mass, false))
-    massPoints.push(new MassPoint(250, 270, mass, false))
-    massPoints.push(new MassPoint(270, 270, mass, false))
+    massPoints.push(new MassPoint(250, 250, mass,false))
+    massPoints.push(new MassPoint(270, 250, mass,false))
+    massPoints.push(new MassPoint(290, 250, mass,false))
+    massPoints.push(new MassPoint(290, 270, mass,false))
+    massPoints.push(new MassPoint(290, 290, mass,false))
+    massPoints.push(new MassPoint(270, 290, mass,false))
+    massPoints.push(new MassPoint(250, 290, mass,false))
+    massPoints.push(new MassPoint(250, 270, mass,false))
+    massPoints.push(new MassPoint(270, 270, mass,false))
 
     springs.push(new Spring(massPoints[0], massPoints[1], stiff, 20, damp, true, true))
     springs.push(new Spring(massPoints[1], massPoints[2], stiff, 20, damp, true, true))
@@ -68,7 +68,7 @@ async function init() {
 
     springs.push(new Spring(massPoints[5], massPoints[7], stiff, Math.sqrt(800), damp))
     springs.push(new Spring(massPoints[6], massPoints[8], stiff, Math.sqrt(800), damp))
-
+    
     update();
 
 };
@@ -150,24 +150,24 @@ function getShadowClippingForPoint(fromX, fromY) {
 
     lines.forEach(e => {
         if (!lines.collideWithMassPoint) {
-            if (!lines.filter(g => lineIntersect(g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, fromX, fromY)).length) {
-                let tmpAngle = angleFromPoints(e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, fromX, fromY) + 180;
+            if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY)).length) {
+                let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY) + 180;
 
                 let thisLineIntersections = [];
 
                 lines.forEach(g => {
-                    thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y) });
-                    thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y) });
+                    thisLineIntersections.push({ angle: tmpAngle - 0.1, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.1) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 - 0.1) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
+                    thisLineIntersections.push({ angle: tmpAngle + 0.1, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.1) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 + 0.1) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
                 })
 
                 let tmp = thisLineIntersections.filter(g => g.line.onLine2 && g.line.onLine1);
-                tmp = tmp.filter(g => distance(g.line.x, g.line.y, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y) > 0.001)
+                tmp = tmp.filter(g => distance(g.line.x, g.line.y, e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y)) > 0.001)
                 tmp = getGroupedBy(tmp, "angle")
 
                 tmp.forEach(g => {
                     e = g.sort((a, b) => distance(a.line.x, a.line.y, fromX, fromY) - distance(b.line.x, b.line.y, fromX, fromY))
 
-                    pointsToDrawShadowAround.push({ x: (g[0].line.x + player.x) / tileSize, y: (g[0].line.y + player.y) / tileSize, angle: g[0].angle })
+                    pointsToDrawShadowAround.push({ x: (g[0].line.x + Math.floor(player.x)) / tileSize, y: (g[0].line.y + Math.floor(player.y)) / tileSize, angle: g[0].angle })
                 })
             }
         }
@@ -178,8 +178,8 @@ function getShadowClippingForPoint(fromX, fromY) {
     let clipping2 = new Path2D();
     pointsToDrawShadowAround.forEach((e, i, a) => {
         clipping2.moveTo(fromX, fromY);
-        clipping2.lineTo(e.x * tileSize - player.x, e.y * tileSize - player.y);
-        clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - player.x, a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - player.y);
+        clipping2.lineTo(e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y));
+        clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - Math.floor(player.x), a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - Math.floor(player.y));
         clipping2.lineTo(fromX, fromY);
     })
     return clipping2;
@@ -508,7 +508,7 @@ class MassPoint {
                         self.pos[i] = p;
                     })
                     this.v.forEach((v, i) => {
-                        self.v[i] = 0;
+                            self.v[i] = 0;
                     })
                 }
             }
