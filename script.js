@@ -30,27 +30,27 @@ async function init() {
     player = new Player(200, 800);
 
     let mass = 20;
-    let stiff = 1;
-    let damp = 2;
+    let stiff = 2;
+    let damp = 0.5;
 
-    massPoints.push(new MassPoint(250, 250, mass))
-    massPoints.push(new MassPoint(270, 250, mass))
-    massPoints.push(new MassPoint(290, 250, mass))
-    massPoints.push(new MassPoint(290, 270, mass))
-    massPoints.push(new MassPoint(290, 290, mass))
-    massPoints.push(new MassPoint(270, 290, mass))
-    massPoints.push(new MassPoint(250, 290, mass))
-    massPoints.push(new MassPoint(250, 270, mass))
-    massPoints.push(new MassPoint(270, 270, mass))
+    massPoints.push(new MassPoint(250, 250, mass, false))
+    massPoints.push(new MassPoint(270, 250, mass, false))
+    massPoints.push(new MassPoint(290, 250, mass, false))
+    massPoints.push(new MassPoint(290, 270, mass, false))
+    massPoints.push(new MassPoint(290, 290, mass, false))
+    massPoints.push(new MassPoint(270, 290, mass, false))
+    massPoints.push(new MassPoint(250, 290, mass, false))
+    massPoints.push(new MassPoint(250, 270, mass, false))
+    massPoints.push(new MassPoint(270, 270, mass, false))
 
-    springs.push(new Spring(massPoints[0], massPoints[1], stiff, 20, damp))
-    springs.push(new Spring(massPoints[1], massPoints[2], stiff, 20, damp))
-    springs.push(new Spring(massPoints[2], massPoints[3], stiff, 20, damp))
-    springs.push(new Spring(massPoints[3], massPoints[4], stiff, 20, damp))
-    springs.push(new Spring(massPoints[4], massPoints[5], stiff, 20, damp))
-    springs.push(new Spring(massPoints[5], massPoints[6], stiff, 20, damp))
-    springs.push(new Spring(massPoints[6], massPoints[7], stiff, 20, damp))
-    springs.push(new Spring(massPoints[7], massPoints[0], stiff, 20, damp))
+    springs.push(new Spring(massPoints[0], massPoints[1], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[1], massPoints[2], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[2], massPoints[3], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[3], massPoints[4], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[4], massPoints[5], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[5], massPoints[6], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[6], massPoints[7], stiff, 20, damp, true, true))
+    springs.push(new Spring(massPoints[7], massPoints[0], stiff, 20, damp, true, true))
 
     springs.push(new Spring(massPoints[1], massPoints[8], stiff, 20, damp))
     springs.push(new Spring(massPoints[7], massPoints[8], stiff, 20, damp))
@@ -68,7 +68,9 @@ async function init() {
 
     springs.push(new Spring(massPoints[5], massPoints[7], stiff, Math.sqrt(800), damp))
     springs.push(new Spring(massPoints[6], massPoints[8], stiff, Math.sqrt(800), damp))
+
     update();
+
 };
 
 function initiateMap() {
@@ -126,13 +128,12 @@ function render() {
         }
 
     }
-    drawShadows();
-    lines.forEach(e => e.update());
 
     shapes.forEach(e => e.draw());
     points.forEach(e => e.forEach(g => g.update()));
+    lines.forEach(e => e.update());
 
-
+    drawShadows();
 
     drawViewCone();
 
@@ -148,34 +149,37 @@ function getShadowClippingForPoint(fromX, fromY) {
     let pointsToDrawShadowAround = [];
 
     lines.forEach(e => {
-        if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY)).length) {
-            let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY) + 180;
+        if (!lines.collideWithMassPoint) {
+            if (!lines.filter(g => lineIntersect(g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, fromX, fromY)).length) {
+                let tmpAngle = angleFromPoints(e.from.x * tileSize - player.x, e.from.y * tileSize - player.y, fromX, fromY) + 180;
 
-            let thisLineIntersections = [];
+                let thisLineIntersections = [];
 
-            lines.forEach(g => {
-                thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
-                thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y)) });
-            })
+                lines.forEach(g => {
+                    thisLineIntersections.push({ angle: tmpAngle - 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 - 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 - 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y) });
+                    thisLineIntersections.push({ angle: tmpAngle + 0.01, line: checkLineIntersection(-1000000 * Math.cos((tmpAngle - 180 + 0.01) * toRad) + fromX, -1000000 * Math.sin((tmpAngle - 180 + 0.01) * toRad) + fromY, fromX, fromY, g.from.x * tileSize - player.x, g.from.y * tileSize - player.y, g.to.x * tileSize - player.x, g.to.y * tileSize - player.y) });
+                })
 
-            let tmp = thisLineIntersections.filter(g => g.line.onLine2 && g.line.onLine1);
-            tmp = tmp.filter(g => distance(g.line.x, g.line.y, e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y)) > 0.001)
-            tmp = getGroupedBy(tmp, "angle")
+                let tmp = thisLineIntersections.filter(g => g.line.onLine2 && g.line.onLine1);
+                tmp = tmp.filter(g => distance(g.line.x, g.line.y, e.from.x * tileSize - player.x, e.from.y * tileSize - player.y) > 0.001)
+                tmp = getGroupedBy(tmp, "angle")
 
-            tmp.forEach(g => {
-                e = g.sort((a, b) => distance(a.line.x, a.line.y, fromX, fromY) - distance(b.line.x, b.line.y, fromX, fromY))
+                tmp.forEach(g => {
+                    e = g.sort((a, b) => distance(a.line.x, a.line.y, fromX, fromY) - distance(b.line.x, b.line.y, fromX, fromY))
 
-                pointsToDrawShadowAround.push({ x: (g[0].line.x + Math.floor(player.x)) / tileSize, y: (g[0].line.y + Math.floor(player.y)) / tileSize, angle: g[0].angle })
-            })
+                    pointsToDrawShadowAround.push({ x: (g[0].line.x + player.x) / tileSize, y: (g[0].line.y + player.y) / tileSize, angle: g[0].angle })
+                })
+            }
         }
+
     })
     pointsToDrawShadowAround = pointsToDrawShadowAround.sort((a, b) => a.angle - b.angle);
 
     let clipping2 = new Path2D();
     pointsToDrawShadowAround.forEach((e, i, a) => {
         clipping2.moveTo(fromX, fromY);
-        clipping2.lineTo(e.x * tileSize - Math.floor(player.x), e.y * tileSize - Math.floor(player.y));
-        clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - Math.floor(player.x), a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - Math.floor(player.y));
+        clipping2.lineTo(e.x * tileSize - player.x, e.y * tileSize - player.y);
+        clipping2.lineTo(a[(i < a.length - 1) ? i + 1 : 0].x * tileSize - player.x, a[(i < a.length - 1) ? i + 1 : 0].y * tileSize - player.y);
         clipping2.lineTo(fromX, fromY);
     })
     return clipping2;
@@ -183,7 +187,6 @@ function getShadowClippingForPoint(fromX, fromY) {
 
 function drawShadows() {
     let clipping2 = getShadowClippingForPoint(canvas.width / 2, canvas.height / 2);
-
     let newCanvas = document.createElement("canvas");
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
@@ -366,11 +369,12 @@ class Point {
 };
 
 class Line {
-    constructor(from, to) {
+    constructor(from, to, collideWithMassPoint) {
         this.from = from;
         this.to = to;
         this.color = "gray";
         this.shouldDraw = true;
+        this.collideWithMassPoint = collideWithMassPoint == undefined ? true : collideWithMassPoint;
     };
     update() {
         this.draw();
@@ -458,12 +462,13 @@ class Player {
 }
 
 class MassPoint {
-    constructor(x, y, m) {
+    constructor(x, y, m, draw) {
         this.pos = new Vector(x, y);
         this.v = new Vector(0, 0);
         this.f = new Vector(0, 0);
         this.m = m;
         this.connectedSprings = [];
+        this.drawing = draw == undefined ? true : draw;
 
     }
 
@@ -472,7 +477,7 @@ class MassPoint {
         this.f.reset();
         this.f.forEach((u, i) => {
             let f = 0;
-            f += (i == 1 ? gravity * self.m / 45 : 0)
+            f += (i == 1 ? gravity * self.m / 35 : 0)
 
             this.connectedSprings.forEach(spring => {
                 if (spring.massP1 == this) {
@@ -495,18 +500,22 @@ class MassPoint {
             self.pos[i] = p;
         })
         lines.forEach(line => {
-            if (lineCircleCollide([line.from.x * tileSize, line.from.y * tileSize], [line.to.x * tileSize, line.to.y * tileSize], this.pos, 3)) {
-                this.pos.forEach((pos, i) => {
-                    let p = pos;
-                    p -= this.v[i] * deltaTime;
-                    self.pos[i] = p;
-                })
-                this.v.forEach((v, i) => {
-                    self.v[i] = 0;
-                })
+            if (line.collideWithMassPoint) {
+                if (lineCircleCollide([line.from.x * tileSize, line.from.y * tileSize], [line.to.x * tileSize, line.to.y * tileSize], this.pos, 3)) {
+                    this.pos.forEach((pos, i) => {
+                        let p = pos;
+                        p -= this.v[i] * deltaTime;
+                        self.pos[i] = p;
+                    })
+                    this.v.forEach((v, i) => {
+                        self.v[i] = 0;
+                    })
+                }
             }
         })
-        this.draw();
+        if (this.drawing) {
+            this.draw();
+        }
     }
     draw() {
         drawCircle(Math.floor(this.pos[0] - player.x), Math.floor(this.pos[1] - player.y), 2, "black");
@@ -514,7 +523,7 @@ class MassPoint {
 }
 
 class Spring {
-    constructor(massP1, massP2, stiffness, restLength, dampingFactor) {
+    constructor(massP1, massP2, stiffness, restLength, dampingFactor, draw, hasCollision) {
         this.massP1 = massP1;
         this.massP2 = massP2;
         this.stiffness = stiffness;
@@ -526,8 +535,16 @@ class Spring {
         this.forceForPoint2 = new Vector(0, 0)
         this.massP1.connectedSprings.push(this);
         this.massP2.connectedSprings.push(this);
+        this.drawing = draw == undefined ? true : draw;
+        this.hasCollision = hasCollision == undefined ? false : true;
+        if (this.hasCollision) {
+            this.line = new Line({ x: this.massP1.pos[0] / tileSize, y: this.massP1.pos[1] / tileSize }, { x: this.massP2.pos[0] / tileSize, y: this.massP2.pos[1] / tileSize }, false)
+            this.line.shouldDraw = false;
+            lines.push(this.line)
+        }
     }
     update() {
+
         let velDiff = this.massP1.v.subtract(this.massP2.v);
         this.force = this.stiffness * ((distance(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]) - this.restLength));
         this.forceAngle = angleFromPoints(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]);
@@ -535,7 +552,15 @@ class Spring {
         this.forceForPoint1[1] = Math.sin(this.forceAngle * toRad) * this.force - velDiff[1] * this.dampingFactor
         this.forceForPoint2[0] = -Math.cos(this.forceAngle * toRad) * this.force + velDiff[0] * this.dampingFactor
         this.forceForPoint2[1] = -Math.sin(this.forceAngle * toRad) * this.force + velDiff[1] * this.dampingFactor
-        this.draw();
+
+        if (this.hasCollision) {
+            this.line.from = { x: this.massP1.pos[0].toPrecision(3) / tileSize, y: this.massP1.pos[1].toPrecision(3) / tileSize }
+            this.line.to = { x: this.massP2.pos[0].toPrecision(3) / tileSize, y: this.massP2.pos[1].toPrecision(3) / tileSize }
+        }
+
+        if (this.drawing) {
+            this.draw();
+        }
     }
     draw() {
         drawLine({ x: (this.massP1.pos[0] - player.x) / tileSize, y: (this.massP1.pos[1] - player.y) / tileSize }, { x: (this.massP2.pos[0] - player.x) / tileSize, y: (this.massP2.pos[1] - player.y) / tileSize }, "red")

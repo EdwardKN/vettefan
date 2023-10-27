@@ -352,7 +352,7 @@ function refreshLoop() {
         }
         times.push(now);
         fps = times.length;
-        deltaTime = 60/fps;
+        deltaTime = 60 / (fps == 0 ? 1 / Infinity : fps);
         refreshLoop();
     });
 }
