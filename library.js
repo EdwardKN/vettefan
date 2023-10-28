@@ -327,6 +327,35 @@ Number.prototype.clamp = function (min, max) {
 function angleFromPoints(x, y, x2, y2) {
     return Math.atan2(y2 - y, x2 - x) * 180 / Math.PI
 }
+function angle(cx, cy, ex, ey) {
+    var dy = ey - cy;
+    var dx = ex - cx;
+    var theta = Math.atan2(dy, dx); // range (-PI, PI]
+    theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
+    return theta;
+  }
+function angle360(cx, cy, ex, ey) {
+    var theta = angle(cx, cy, ex, ey); // range (-180, 180]
+    if (theta < 0) theta = 360 + theta; // range [0, 360)
+    return theta;
+  }
+  function sum(a) {
+    var s = 0;
+    for (var i = 0; i < a.length; i++) s += a[i];
+    return s;
+} 
+
+function degToRad(a) {
+    return Math.PI / 180 * a;
+}
+  function meanAngleDeg(a) {
+    let tmp = 180 / Math.PI * Math.atan2(
+        sum(a.map(degToRad).map(Math.sin)) / a.length,
+        sum(a.map(degToRad).map(Math.cos)) / a.length
+    );
+    if (tmp < 0) tmp = 360 + tmp; // range [0, 360)
+    return tmp;
+}
 
 function getGroupedBy(arr, key) {
     var groups = {}, result = [];
