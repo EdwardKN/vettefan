@@ -28,7 +28,11 @@ async function init() {
     await loadImages(images);
     player = new Player(200, 800);
 
-    softbodies.push(new SoftBody(300,200,20,0.2,1))
+    softbodies.push(new SoftBody(300,750,20,0.3,1))
+    softbodies.push(new SoftBody(300,200,20,0.5,1))
+    softbodies.push(new SoftBody(300,300,20,0.5,1))
+    softbodies.push(new SoftBody(300,400,20,0.5,1))
+    softbodies.push(new SoftBody(300,500,20,0.5,1))
 
     update();
 
@@ -112,7 +116,7 @@ function getShadowClippingForPoint(fromX, fromY) {
     let pointsToDrawShadowAround = [];
 
     lines.forEach(e => {
-        if (!lines.collideWithMassPoint) {
+        if (!lines.connectedSoftBody) {
             if (!lines.filter(g => lineIntersect(g.from.x * tileSize - Math.floor(player.x), g.from.y * tileSize - Math.floor(player.y), g.to.x * tileSize - Math.floor(player.x), g.to.y * tileSize - Math.floor(player.y), e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY)).length) {
                 let tmpAngle = angleFromPoints(e.from.x * tileSize - Math.floor(player.x), e.from.y * tileSize - Math.floor(player.y), fromX, fromY) + 180;
 
@@ -332,12 +336,12 @@ class Point {
 };
 
 class Line {
-    constructor(from, to, collideWithMassPoint) {
+    constructor(from, to, connectedSoftBody) {
         this.from = from;
         this.to = to;
         this.color = "gray";
         this.shouldDraw = true;
-        this.collideWithMassPoint = collideWithMassPoint == undefined ? true : collideWithMassPoint;
+        this.connectedSoftBody = connectedSoftBody;
     };
     update() {
         this.draw();
@@ -461,38 +465,38 @@ class SoftBody{
         this.shapeMaintainingSprings = [];
 
         this.originalPointOffsets.forEach(offset =>{
-            self.massPoints.push(new MassPoint(x+offset.x, y+offset.y, mass,false))
+            self.massPoints.push(new MassPoint(x+offset.x, y+offset.y, mass,this,false))
         })
 
-        this.springs.push(new Spring(this.massPoints[0], this.massPoints[1], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[1], this.massPoints[2], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[2], this.massPoints[3], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[3], this.massPoints[4], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[4], this.massPoints[5], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[5], this.massPoints[6], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[6], this.massPoints[7], stiff, 20, damp, true, true))
-        this.springs.push(new Spring(this.massPoints[7], this.massPoints[0], stiff, 20, damp, true, true))
+        this.springs.push(new Spring(this.massPoints[0], this.massPoints[1], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[1], this.massPoints[2], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[2], this.massPoints[3], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[3], this.massPoints[4], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[4], this.massPoints[5], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[5], this.massPoints[6], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[6], this.massPoints[7], stiff, 20, damp, true, true,this))
+        this.springs.push(new Spring(this.massPoints[7], this.massPoints[0], stiff, 20, damp, true, true,this))
 
-        this.springs.push(new Spring(this.massPoints[1], this.massPoints[8], stiff, 20, damp))
-        this.springs.push(new Spring(this.massPoints[7], this.massPoints[8], stiff, 20, damp))
-        this.springs.push(new Spring(this.massPoints[3], this.massPoints[8], stiff, 20, damp))
-        this.springs.push(new Spring(this.massPoints[5], this.massPoints[8], stiff, 20, damp))
+        this.springs.push(new Spring(this.massPoints[1], this.massPoints[8], stiff, 20, damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[7], this.massPoints[8], stiff, 20, damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[3], this.massPoints[8], stiff, 20, damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[5], this.massPoints[8], stiff, 20, damp,true, false,this))
 
-        this.springs.push(new Spring(this.massPoints[0], this.massPoints[8], stiff, Math.sqrt(800), damp))
-        this.springs.push(new Spring(this.massPoints[1], this.massPoints[7], stiff, Math.sqrt(800), damp))
+        this.springs.push(new Spring(this.massPoints[0], this.massPoints[8], stiff, Math.sqrt(800), damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[1], this.massPoints[7], stiff, Math.sqrt(800), damp,true, false,this))
 
-        this.springs.push(new Spring(this.massPoints[1], this.massPoints[3], stiff, Math.sqrt(800), damp))
-        this.springs.push(new Spring(this.massPoints[2], this.massPoints[8], stiff, Math.sqrt(800), damp))
+        this.springs.push(new Spring(this.massPoints[1], this.massPoints[3], stiff, Math.sqrt(800), damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[2], this.massPoints[8], stiff, Math.sqrt(800), damp,true, false,this))
 
-        this.springs.push(new Spring(this.massPoints[3], this.massPoints[5], stiff, Math.sqrt(800), damp))
-        this.springs.push(new Spring(this.massPoints[4], this.massPoints[8], stiff, Math.sqrt(800), damp))
+        this.springs.push(new Spring(this.massPoints[3], this.massPoints[5], stiff, Math.sqrt(800), damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[4], this.massPoints[8], stiff, Math.sqrt(800), damp,true, false,this))
 
-        this.springs.push(new Spring(this.massPoints[5], this.massPoints[7], stiff, Math.sqrt(800), damp))
-        this.springs.push(new Spring(this.massPoints[6], this.massPoints[8], stiff, Math.sqrt(800), damp))
+        this.springs.push(new Spring(this.massPoints[5], this.massPoints[7], stiff, Math.sqrt(800), damp,true, false,this))
+        this.springs.push(new Spring(this.massPoints[6], this.massPoints[8], stiff, Math.sqrt(800), damp,true, false,this))
 
         this.massPoints.forEach(masspoint => {
-            self.shapeMaintainingPoints.push(new StablePoint(masspoint.pos[0],masspoint.pos[1]))
-            //self.shapeMaintainingSprings.push(new Spring(self.shapeMaintainingPoints[self.shapeMaintainingPoints.length-1],masspoint,0.000000001,0.001,0.001,false,false,"blue"))
+            self.shapeMaintainingPoints.push(new StablePoint(masspoint.pos[0],masspoint.pos[1]));
+            self.shapeMaintainingSprings.push(new Spring(self.shapeMaintainingPoints[self.shapeMaintainingPoints.length-1],masspoint,0.2,0,0.5,true,false,this,"blue",5));
         })
     }
     updateShapeMaintaining(){
@@ -511,17 +515,16 @@ class SoftBody{
 
         let degs = [];
         this.massPoints.forEach((masspoint,i) => {
-            degs.push(angle360(masspoint.pos[0],masspoint.pos[1],center[0],center[1]));
+            degs.push(Math.floor(angle360(self.originalPointOffsetCenter[0],self.originalPointOffsetCenter[0],self.originalPointOffsets[i].x,self.originalPointOffsets[i].y) - angle360(masspoint.pos[0],masspoint.pos[1],center[0],center[1])) );
         });
 
-        degs = meanAngleDeg(degs)
-        console.log(degs)
+        degs = -meanAngleDeg(degs) + 180
+
         this.shapeMaintainingPoints.forEach((point,i) => {
             point.pos[0] = center[0] + Math.cos(degs*toRad) * (this.originalPointOffsets[i].x -this.originalPointOffsetCenter[0])- Math.sin(degs*toRad) * (this.originalPointOffsets[i].y-this.originalPointOffsetCenter[1]);
             point.pos[1] = center[1] + Math.cos(degs*toRad) *( this.originalPointOffsets[i].y-this.originalPointOffsetCenter[1]) + Math.sin(degs*toRad) * (this.originalPointOffsets[i].x-this.originalPointOffsetCenter[0]);
         })
         this.shapeMaintainingSprings.forEach(e => e.update());
-        this.shapeMaintainingPoints.forEach(e => e.update());
     }
     update(){
         this.springs.forEach(e => {e.update();})
@@ -541,42 +544,21 @@ class StablePoint{
         this.moveSpeed = 1;
     }
     draw(){
-        drawCircle(Math.floor(this.pos[0] - player.x), Math.floor(this.pos[1] - player.y), 2, "yellow");
+        //drawCircle(Math.floor(this.pos[0] - player.x), Math.floor(this.pos[1] - player.y), 2, "yellow");
     }
-    update(){
-        let self = this;
-        if(this.pos[0] < this.Targetpos[0]){
-            this.v[0] = this.moveSpeed;
-        };
-        if(this.pos[0] > this.Targetpos[0]){
-            this.v[0] = -this.moveSpeed;
-        };
-        if(this.pos[1] < this.Targetpos[1]){
-            this.v[1] = this.moveSpeed;
-        };
-        if(this.pos[1] > this.Targetpos[1]){
-            this.v[1] = -this.moveSpeed;
-        };
+    
 
-        this.pos.forEach((pos, i) => {
-            let p = pos;
-            p += self.v[i];
-
-            self.pos[i] = p;
-        })
-        
-    }
 }
 
 class MassPoint {
-    constructor(x, y, m, draw) {
+    constructor(x, y, m, connectedSoftBody,draw) {
         this.pos = new Vector(x, y);
         this.v = new Vector(0, 0);
         this.f = new Vector(0, 0);
         this.m = m;
         this.connectedSprings = [];
         this.drawing = draw == undefined ? true : draw;
-
+        this.connectedSoftBody = connectedSoftBody;
     }
 
     update() {
@@ -608,7 +590,7 @@ class MassPoint {
             self.pos[i] = p;
         })
         lines.forEach(line => {
-            if (line.collideWithMassPoint) {
+            if (line.connectedSoftBody !== self.connectedSoftBody) {
                 if (lineCircleCollide([line.from.x * tileSize, line.from.y * tileSize], [line.to.x * tileSize, line.to.y * tileSize], this.pos, 3)) {
                     this.pos.forEach((pos, i) => {
                         let p = pos;
@@ -631,7 +613,7 @@ class MassPoint {
 }
 
 class Spring {
-    constructor(massP1, massP2, stiffness, restLength, dampingFactor, draw, hasCollision,color) {
+    constructor(massP1, massP2, stiffness, restLength, dampingFactor, draw, hasCollision,softbody,color,ignoreIfUnder) {
         this.massP1 = massP1;
         this.massP2 = massP2;
         this.stiffness = stiffness;
@@ -639,41 +621,54 @@ class Spring {
         this.dampingFactor = dampingFactor;
         this.forceAngle = 0;
         this.force = 0;
-        this.forceForPoint1 = new Vector(0, 0)
-        this.forceForPoint2 = new Vector(0, 0)
+        this.forceForPoint1 = new Vector(0, 0);
+        this.forceForPoint2 = new Vector(0, 0);
         this.massP1.connectedSprings.push(this);
         this.massP2.connectedSprings.push(this);
         this.drawing = draw == undefined ? true : draw;
         this.hasCollision = hasCollision == undefined ? false : true;
         if (this.hasCollision) {
-            this.line = new Line({ x: this.massP1.pos[0] / tileSize, y: this.massP1.pos[1] / tileSize }, { x: this.massP2.pos[0] / tileSize, y: this.massP2.pos[1] / tileSize }, false)
+            this.line = new Line({ x: this.massP1.pos[0] / tileSize, y: this.massP1.pos[1] / tileSize }, { x: this.massP2.pos[0] / tileSize, y: this.massP2.pos[1] / tileSize }, softbody)
             this.line.shouldDraw = false;
-            lines.push(this.line)
+            lines.push(this.line);
         }
         this.color = !color ? "red" : color;
+        this.ignoreIfUnder = ignoreIfUnder == undefined ? 0 : ignoreIfUnder;
     }
     update() {
-        let velDiff = this.massP1.v.subtract(this.massP2.v);
-        this.force = this.stiffness * ((distance(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]) - this.restLength));
-        this.forceAngle = angleFromPoints(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]);
-        this.forceForPoint1[0] = Math.cos(this.forceAngle * toRad) * this.force - velDiff[0] * this.dampingFactor
-        this.forceForPoint1[1] = Math.sin(this.forceAngle * toRad) * this.force - velDiff[1] * this.dampingFactor
-        this.forceForPoint2[0] = -Math.cos(this.forceAngle * toRad) * this.force + velDiff[0] * this.dampingFactor
-        this.forceForPoint2[1] = -Math.sin(this.forceAngle * toRad) * this.force + velDiff[1] * this.dampingFactor
-
-        if (this.hasCollision) {
-            this.line.from = { x: this.massP1.pos[0].toPrecision(3) / tileSize, y: this.massP1.pos[1].toPrecision(3) / tileSize }
-            this.line.to = { x: this.massP2.pos[0].toPrecision(3) / tileSize, y: this.massP2.pos[1].toPrecision(3) / tileSize }
-        }
-
-        if (this.drawing) {
-            this.draw();
-        }
-    }
+        if(distance(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]) > this.ignoreIfUnder){
+            let velDiff = this.massP1.v.subtract(this.massP2.v);
+            this.force = this.stiffness * ((distance(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]) - this.restLength));
+            this.forceAngle = angleFromPoints(this.massP1.pos[0], this.massP1.pos[1], this.massP2.pos[0], this.massP2.pos[1]);
+            this.forceForPoint1[0] = Math.cos(this.forceAngle * toRad) * this.force - velDiff[0] * this.dampingFactor;
+            this.forceForPoint1[1] = Math.sin(this.forceAngle * toRad) * this.force - velDiff[1] * this.dampingFactor;
+            this.forceForPoint2[0] = -Math.cos(this.forceAngle * toRad) * this.force + velDiff[0] * this.dampingFactor;
+            this.forceForPoint2[1] = -Math.sin(this.forceAngle * toRad) * this.force + velDiff[1] * this.dampingFactor;
+    
+            if (this.hasCollision) {
+                this.line.from = { x: this.massP1.pos[0].toPrecision(3) / tileSize, y: this.massP1.pos[1].toPrecision(3) / tileSize };
+                this.line.to = { x: this.massP2.pos[0].toPrecision(3) / tileSize, y: this.massP2.pos[1].toPrecision(3) / tileSize };
+            };
+            if (this.drawing) {
+                this.draw();
+            };
+        }else{
+            this.forceForPoint1[0] = 0;
+            this.forceForPoint1[1] = 0;
+            this.forceForPoint2[0] = 0;
+            this.forceForPoint2[1] = 0;
+    
+            if (this.hasCollision) {
+                this.line.from = { x: this.massP1.pos[0].toPrecision(3) / tileSize, y: this.massP1.pos[1].toPrecision(3) / tileSize };
+                this.line.to = { x: this.massP2.pos[0].toPrecision(3) / tileSize, y: this.massP2.pos[1].toPrecision(3) / tileSize };
+            };
+        };
+        
+    };
     draw() {
-        drawLine({ x: (this.massP1.pos[0] - player.x) / tileSize, y: (this.massP1.pos[1] - player.y) / tileSize }, { x: (this.massP2.pos[0] - player.x) / tileSize, y: (this.massP2.pos[1] - player.y) / tileSize }, this.color)
-    }
-}
+        drawLine({ x: (this.massP1.pos[0] - player.x) / tileSize, y: (this.massP1.pos[1] - player.y) / tileSize }, { x: (this.massP2.pos[0] - player.x) / tileSize, y: (this.massP2.pos[1] - player.y) / tileSize }, "rgb("+this.force*20+","+this.force*20+","+this.force*20+")")
+    };
+};
 
 class Vector extends Array {
     add(other) {
