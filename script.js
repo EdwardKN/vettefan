@@ -21,6 +21,8 @@ var currentEditingLine = undefined;
 
 let softbodies = [];
 
+var pickedBody = undefined;
+
 async function init() {
     shapes.push(new Shape())
     initiateMap();
@@ -28,11 +30,11 @@ async function init() {
     await loadImages(images);
     player = new Player(200, 800);
 
-    softbodies.push(new SoftBody(300,750,20,0.3,1))
-    softbodies.push(new SoftBody(300,200,20,0.5,1))
-    softbodies.push(new SoftBody(300,300,20,0.5,1))
-    softbodies.push(new SoftBody(300,400,20,0.5,1))
-    softbodies.push(new SoftBody(300,500,20,0.5,1))
+    softbodies.push(new SoftBody(310,750,20,0.3,1))
+    softbodies.push(new SoftBody(320,650,20,0.3,1))
+    softbodies.push(new SoftBody(330,550,20,0.3,1))
+    softbodies.push(new SoftBody(340,450,20,0.3,1))
+
 
     update();
 
@@ -287,7 +289,7 @@ class Point {
 
     update() {
         this.draw();
-        this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize / 4);
+        this.hover = (distance(this.x * tileSize - player.x, this.y * tileSize - player.y, mouse.x, mouse.y) < tileSize / 4 && !pickedBody);
 
         this.color = this.hover ? "white" : "gray";
 
@@ -336,12 +338,13 @@ class Point {
 };
 
 class Line {
-    constructor(from, to, connectedSoftBody) {
+    constructor(from, to, connectedSoftBody,connectedSpring) {
         this.from = from;
         this.to = to;
         this.color = "gray";
         this.shouldDraw = true;
         this.connectedSoftBody = connectedSoftBody;
+        this.connectedSpring = connectedSpring;
     };
     update() {
         this.draw();
@@ -511,6 +514,16 @@ class SoftBody{
         center.forEach((g,i)=>{
             center[i] =  center[i] / self.massPoints.length;
         });
+        if(distance(center[0] - player.x,center[1] - player.y, mouse.x, mouse.y) < 20 && mouse.down && !pickedBody){
+            pickedBody = this;
+        }
+        if(pickedBody == this){
+            center[0] = mouse.x + player.x
+            center[1] = mouse.y + player.y
+            if(!mouse.down){
+                pickedBody = undefined;
+            }
+        }
         this.shapeMaintainingPoints.forEach(e => e.draw());
 
         let degs = [];
@@ -594,12 +607,15 @@ class MassPoint {
                 if (lineCircleCollide([line.from.x * tileSize, line.from.y * tileSize], [line.to.x * tileSize, line.to.y * tileSize], this.pos, 3)) {
                     this.pos.forEach((pos, i) => {
                         let p = pos;
-                        p -= this.v[i] * deltaTime;
+                        p -= this.v[i] * deltaTime/(line.connectedSpring ? 2 : 1);
                         self.pos[i] = p;
                     })
+                    line.connectedSpring?.massP1.pos.forEach((pos, i) => {line.connectedSpring.massP1.pos[i] = pos + self.v[i] * deltaTime/2;})
+                    line.connectedSpring?.massP2.pos.forEach((pos, i) => {line.connectedSpring.massP2.pos[i] = pos + self.v[i] * deltaTime/2;})
                     this.v.forEach((v, i) => {
                             self.v[i] = 0;
                     })
+
                 }
             }
         })
@@ -628,7 +644,7 @@ class Spring {
         this.drawing = draw == undefined ? true : draw;
         this.hasCollision = hasCollision == undefined ? false : true;
         if (this.hasCollision) {
-            this.line = new Line({ x: this.massP1.pos[0] / tileSize, y: this.massP1.pos[1] / tileSize }, { x: this.massP2.pos[0] / tileSize, y: this.massP2.pos[1] / tileSize }, softbody)
+            this.line = new Line({ x: this.massP1.pos[0] / tileSize, y: this.massP1.pos[1] / tileSize }, { x: this.massP2.pos[0] / tileSize, y: this.massP2.pos[1] / tileSize }, softbody,this)
             this.line.shouldDraw = false;
             lines.push(this.line);
         }
